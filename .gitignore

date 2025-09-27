@@ -1,0 +1,28 @@
+# Eclipse
+.project
+.classpath
+.settings/
+.metadata/
+bin/
+
+# Maven
+target/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs
+*.log
+
+# Java
+*.class
+
+# System Files
+Thumbs.db
