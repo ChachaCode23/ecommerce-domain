@@ -16,6 +16,7 @@ Se estructura de forma modular, siguiendo una arquitectura **limpia y organizada
 ## 🧱 Estructura del Proyecto
 
 El proyecto se encuentra dividido en diferentes paquetes:
+
 com.urbancollection.ecommerce.domain.base
 ├── BaseEntity.java
 └── OperationResult.java
@@ -87,9 +88,10 @@ Vista previa de la arquitectura:
 
 ## 🔗 Enlace del Repositorio
 
-👉 [Acceder al repositorio en GitHub](https://github.com/)
+[Acceder al repositorio en GitHub](https://github.com/ChachaCode23/ecommerce-domain)
+
 
 ---
 
-> *Este trabajo fue realizado con fines académicos para demostrar la comprensión de la capa de dominio dentro de una arquitectura de software.*
+>Este trabajo fue realizado con fines académicos para demostrar la comprensión de la capa de dominio dentro de una arquitectura de software.
 
