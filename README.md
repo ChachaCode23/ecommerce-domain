@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 Proyecto Académico: E-commerce
+=======
+# 🛒 Proyecto Académico: E-commerce
+>>>>>>> 152450a (README: agrega capa de persistencia, diagrama y guía de pruebas)
 
 Este repositorio forma parte del desarrollo del **proyecto académico individual** de la asignatura **Programación 2**, correspondiente al **Instituto Tecnológico de las Américas (ITLA)**.
 
@@ -52,15 +56,84 @@ com.urbancollection.ecommerce.domain.repository
 ├── EnvioRepository.java
 └── CuponRepository.java
 
+---
+
+## 🧭 Arquitectura de la Capa de Dominio
+
+![Arquitectura Ecommerce](docs/Arquitectura%20Ecommerce.png)
 
 **Arquitectura de la Capa de Dominio:**
 
+<<<<<<< HEAD
 ![Arquitectura Ecommerce](docs/Arquitectura%20Ecommerce.png)
 
 
 Capa de Persistencia (Es la parte que estamos agregando)
 
 La **capa de persistencia** se implementó para simular una base de datos **en memoria**, ideal para pruebas unitarias sin conexión real a un gestor de base de datos.
+=======
+## 💾 Capa de Persistencia
+
+La **capa de persistencia** se implementó para simular una base de datos **en memoria**, ideal para pruebas unitarias sin conexión real a un gestor de base de datos.
+
+Esta capa incluye:
+
+- **BaseRepository** → Clase genérica con las operaciones CRUD básicas.  
+- **InMemoryContext** → Almacén en memoria (usa `ConcurrentHashMap`).  
+- **Repositorios específicos (Impl)** → Implementan las interfaces del dominio.  
+- **PruebaPersistencia.java** → Clase de prueba para validar las operaciones.
+
+---
+
+### 📂 Estructura de la Capa de Persistencia
+
+com.urbancollection.ecommerce.persistence
+├── base
+│ └── BaseRepository.java
+├── context
+│ └── InMemoryContext.java
+├── repositories
+│ ├── ProductoRepositoryImpl.java
+│ ├── CuponRepositoryImpl.java
+│ ├── UsuarioRepositoryImpl.java
+│ ├── DireccionRepositoryImpl.java
+│ ├── EnvioRepositoryImpl.java
+│ ├── PedidoRepositoryImpl.java
+│ ├── ItemPedidoRepositoryImpl.java
+│ └── TransaccionPagoRepositoryImpl.java
+└── PruebaPersistencia.java
+
+---
+
+## 🧭 Arquitectura de la Capa de Persistencia
+
+![Arquitectura Persistencia](docs/Arquitectura%20Persistencia.png)
+
+---
+
+## 🧪 Ejecución de Pruebas
+
+Para validar la funcionalidad de la capa de persistencia:
+
+1. Ejecutar la clase `PruebaPersistencia.java`  
+2. Observar en la consola las operaciones de **guardar**, **buscar**, **listar** y **eliminar** productos simulados en memoria.
+
+**Ejemplo de salida esperada:**
+
+Producto encontrado: Gorra
+Total de productos: 1
+Producto eliminado. Total actual: 0
+
+
+---
+
+## 👨‍💻 Desarrollado por
+
+**Nombre:** Yassil Elpidio Del Orbe Moronta  
+**Matrícula:** 2024-2536  
+**Materia:** Programación 2  
+**Facilitador:** Francis Ramírez
+>>>>>>> 152450a (README: agrega capa de persistencia, diagrama y guía de pruebas)
 
 Esta capa incluye:
 - **BaseRepository** → Clase genérica con las operaciones CRUD básicas.  
