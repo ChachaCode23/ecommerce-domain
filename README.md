@@ -1,4 +1,4 @@
-# 🛒 Proyecto Académico: Capa de Dominio - E-commerce
+Proyecto Académico: E-commerce
 
 Este repositorio forma parte del desarrollo del **proyecto académico individual** de la asignatura **Programación 2**, correspondiente al **Instituto Tecnológico de las Américas (ITLA)**.
 
@@ -6,17 +6,16 @@ El objetivo principal es construir la **capa de dominio** de una plataforma **E-
 
 ---
 
-## 📚 Descripción General
+Descripción General
 
 La capa de dominio incluye las **entidades**, **enumeraciones** y **repositorios base** que representan la lógica de negocio del sistema.  
 Se estructura de forma modular, siguiendo una arquitectura **limpia y organizada**.
 
 ---
 
-## 🧱 Estructura del Proyecto
+Estructura del Proyecto
 
 El proyecto se encuentra dividido en diferentes paquetes:
-
 com.urbancollection.ecommerce.domain.base
 ├── BaseEntity.java
 └── OperationResult.java
@@ -39,59 +38,74 @@ com.urbancollection.ecommerce.domain.entity.ventas
 └── TransaccionPago.java
 
 com.urbancollection.ecommerce.domain.enums
-├── EstadoDePedido.java
 ├── EstadoDeEnvio.java
+├── EstadoDePedido.java
 └── MetodoDePago.java
 
 com.urbancollection.ecommerce.domain.repository
-├── IBaseRepository.java
-├── UsuarioRepository.java
 ├── ProductoRepository.java
+├── UsuarioRepository.java
 ├── PedidoRepository.java
+├── ItemPedidoRepository.java
+├── TransaccionPagoRepository.java
+├── DireccionRepository.java
 ├── EnvioRepository.java
 └── CuponRepository.java
 
 
----
+**Arquitectura de la Capa de Dominio:**
 
-## 🧩 Tecnologías Utilizadas
-
-- **Lenguaje:** Java  
-- **Framework:** Maven  
-- **IDE:** Eclipse  
-- **Versión de Java:** 1.8  
-- **Control de versiones:** Git & GitHub
-
----
-
-## 🖼️ Arquitectura del Proyecto
-
-En la carpeta `/docs` se incluye una imagen representando la estructura del dominio:
-
-📁 **docs/Arquitectura Ecommerce.png**
-
-Vista previa de la arquitectura:
-
-![Arquitectura Ecommerce](./docs/Arquitectura%20Ecommerce.png)
-
----
-
-## 👨‍💻 Desarrollado por
-
-**Nombre:** Yassil Elpidio Del Orbe Moronta  
-**Matrícula:** 2024-2536  
-**Materia:** Programación 2  
-**Facilitador:** Francis Ramírez  
-**Fecha:** 26/09/2025
-
----
-
-## 🔗 Enlace del Repositorio
-
-[Acceder al repositorio en GitHub](https://github.com/ChachaCode23/ecommerce-domain)
+![Arquitectura Ecommerce](docs/Arquitectura%20Ecommerce.png)
 
 
----
+Capa de Persistencia (Es la parte que estamos agregando)
 
->Este trabajo fue realizado con fines académicos para demostrar la comprensión de la capa de dominio dentro de una arquitectura de software.
+La **capa de persistencia** se implementó para simular una base de datos **en memoria**, ideal para pruebas unitarias sin conexión real a un gestor de base de datos.
 
+Esta capa incluye:
+- **BaseRepository** → Clase genérica con las operaciones CRUD básicas.  
+- **InMemoryContext** → Almacén en memoria (usa `ConcurrentHashMap`).  
+- **Repositorios específicos (Impl)** → Implementan las interfaces del dominio.  
+- **PruebaPersistencia.java** → Clase de prueba para validar las operaciones.
+
+Estructura:
+com.urbancollection.ecommerce.persistence
+├── base
+│ └── BaseRepository.java
+├── context
+│ └── InMemoryContext.java
+├── repositories
+│ ├── ProductoRepositoryImpl.java
+│ ├── CuponRepositoryImpl.java
+│ ├── UsuarioRepositoryImpl.java
+│ ├── DireccionRepositoryImpl.java
+│ ├── EnvioRepositoryImpl.java
+│ ├── PedidoRepositoryImpl.java
+│ ├── ItemPedidoRepositoryImpl.java
+│ └── TransaccionPagoRepositoryImpl.java
+└── PruebaPersistencia.java
+
+
+**Arquitectura de la Capa de Persistencia:**
+
+![Arquitectura Persistencia](docs/Arquitectura%20Persistencia.png
+
+
+Ejecución de Pruebas
+
+Para validar la funcionalidad de la capa de persistencia:
+
+1. Ejecutar la clase `PruebaPersistencia.java`  
+2. Observar en la consola las operaciones de **guardar**, **buscar**, **listar** y **eliminar** productos simulados en memoria.
+
+Ejemplo de salida esperada:
+Producto encontrado: Gorra
+Total de productos: 1
+Producto eliminado. Total actual: 0
+
+Desarrollado por
+
+Nombre: Yassil Elpidio Del Orbe Moronta
+Matrícula: 2024-2536
+Materia: Programación 2
+Facilitador: Francis Ramírez
