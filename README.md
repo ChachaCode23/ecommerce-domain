@@ -111,30 +111,6 @@ com.urbancollection.ecommerce.persistence
 
 ---
 
-## 🧪 Ejecución de Pruebas
-
-Para validar la funcionalidad de la capa de persistencia:
-
-1. Ejecutar la clase `PruebaPersistencia.java`  
-2. Observar en la consola las operaciones de **guardar**, **buscar**, **listar** y **eliminar** productos simulados en memoria.
-
-**Ejemplo de salida esperada:**
-
-Producto encontrado: Gorra
-Total de productos: 1
-Producto eliminado. Total actual: 0
-
-
----
-
-## 👨‍💻 Desarrollado por
-
-**Nombre:** Yassil Elpidio Del Orbe Moronta  
-**Matrícula:** 2024-2536  
-**Materia:** Programación 2  
-**Facilitador:** Francis Ramírez
->>>>>>> 152450a (README: agrega capa de persistencia, diagrama y guía de pruebas)
-
 Esta capa incluye:
 - **BaseRepository** → Clase genérica con las operaciones CRUD básicas.  
 - **InMemoryContext** → Almacén en memoria (usa `ConcurrentHashMap`).  
@@ -157,11 +133,6 @@ com.urbancollection.ecommerce.persistence
 │ ├── ItemPedidoRepositoryImpl.java
 │ └── TransaccionPagoRepositoryImpl.java
 └── PruebaPersistencia.java
-
-
-**Arquitectura de la Capa de Persistencia:**
-
-![Arquitectura Persistencia](docs/Arquitectura%20Persistencia.png
 
 
 Ejecución de Pruebas
