@@ -8,7 +8,7 @@ import com.urbancollection.ecommerce.persistence.base.BaseRepository;
 import com.urbancollection.ecommerce.persistence.context.InMemoryContext;
 
 /**
- * Implementación en memoria del repositorio de TransaccionPago.
+ * Implementa en memoria del repositorio de TransaccionPago.
  * 
  * Permite almacenar, buscar, eliminar y listar transacciones de pago
  * usando una estructura en memoria, ideal para pruebas sin base de datos.

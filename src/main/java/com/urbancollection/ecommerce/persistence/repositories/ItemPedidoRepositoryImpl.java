@@ -8,7 +8,7 @@ import com.urbancollection.ecommerce.persistence.base.BaseRepository;
 import com.urbancollection.ecommerce.persistence.context.InMemoryContext;
 
 /**
- * Implementación en memoria del repositorio de ItemPedido.
+ * Implementacin en memoria del repositorio de ItemPedido.
  * 
  * Permite almacenar, buscar, eliminar y listar items de pedido
  * usando una estructura en memoria.

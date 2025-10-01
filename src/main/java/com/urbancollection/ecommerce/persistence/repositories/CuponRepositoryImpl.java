@@ -7,6 +7,10 @@ import com.urbancollection.ecommerce.domain.repository.CuponRepository;
 import com.urbancollection.ecommerce.persistence.base.BaseRepository;
 import com.urbancollection.ecommerce.persistence.context.InMemoryContext;
 
+/**
+ * Esta clase maneja las operaciones CRUD usando el contexto en memoria.
+ * Implementa en memoria del repositorio de cupones.
+ */
 public class CuponRepositoryImpl
         extends BaseRepository<Cupon>
         implements CuponRepository {
