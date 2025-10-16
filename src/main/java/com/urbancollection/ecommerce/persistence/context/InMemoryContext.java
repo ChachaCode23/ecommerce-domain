@@ -1,56 +1,97 @@
 package com.urbancollection.ecommerce.persistence.context;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
-import com.urbancollection.ecommerce.domain.entity.catalogo.Producto;
 import com.urbancollection.ecommerce.domain.entity.catalogo.Cupon;
+import com.urbancollection.ecommerce.domain.entity.catalogo.Producto;
 import com.urbancollection.ecommerce.domain.entity.logistica.Direccion;
 import com.urbancollection.ecommerce.domain.entity.logistica.Envio;
-import com.urbancollection.ecommerce.domain.entity.usuarios.Usuario;
 import com.urbancollection.ecommerce.domain.entity.usuarios.ListaDeseos;
-import com.urbancollection.ecommerce.domain.entity.ventas.Pedido;
+import com.urbancollection.ecommerce.domain.entity.usuarios.Usuario;
 import com.urbancollection.ecommerce.domain.entity.ventas.ItemPedido;
+import com.urbancollection.ecommerce.domain.entity.ventas.Pedido;
 import com.urbancollection.ecommerce.domain.entity.ventas.TransaccionPago;
 
 /**
- * Esta clase representa un "contexto en memoria" que actua como una base de datos simulada.
- * Cada entidad del dominio tiene su propio mapa donde se almacenan los datos.
- *
- * Esta clase usa el patron Singleton para garantizar que solo exista una instancia del contexto
- * en toda la aplicacion.
- *
- * Se utilizo en los repositorios para guardar, buscar, eliminar y listar los datos en memoria.
+ * Contexto en memoria (Singleton) que simula una base de datos.
  */
 public final class InMemoryContext {
 
-
-    // Seccion de Catalogo
+    // ====== “Tablas” en memoria ======
+    // Catálogo
     public final Map<Long, Producto> productos = new ConcurrentHashMap<>();
-    public final Map<Long, Cupon> cupones = new ConcurrentHashMap<>();
+    public final Map<Long, Cupon>    cupones   = new ConcurrentHashMap<>();
 
-    // Seccion de Logistica
+    // Logística
     public final Map<Long, Direccion> direcciones = new ConcurrentHashMap<>();
-    public final Map<Long, Envio> envios = new ConcurrentHashMap<>();
+    public final Map<Long, Envio>     envios      = new ConcurrentHashMap<>();
 
-    // Seccion de Usuarios
-    public final Map<Long, Usuario> usuarios = new ConcurrentHashMap<>();
+    // Usuarios
+    public final Map<Long, Usuario>     usuarios     = new ConcurrentHashMap<>();
     public final Map<Long, ListaDeseos> listasDeseos = new ConcurrentHashMap<>();
 
-    // Seccion de Ventas
-    public final Map<Long, Pedido> pedidos = new ConcurrentHashMap<>();
-    public final Map<Long, ItemPedido> itemsPedido = new ConcurrentHashMap<>();
+    // Ventas
+    public final Map<Long, Pedido>          pedidos       = new ConcurrentHashMap<>();
+    public final Map<Long, ItemPedido>      itemsPedido   = new ConcurrentHashMap<>();
     public final Map<Long, TransaccionPago> transacciones = new ConcurrentHashMap<>();
 
-    // Patron Singleton
-    // Se crea una unica instancia de InMemoryContext
+    // ====== Secuencias (autoincrement) ======
+    private final AtomicLong productoSeq      = new AtomicLong(1);
+    private final AtomicLong cuponSeq         = new AtomicLong(1);
+    private final AtomicLong direccionSeq     = new AtomicLong(1);
+    private final AtomicLong envioSeq         = new AtomicLong(1);
+    private final AtomicLong usuarioSeq       = new AtomicLong(1);
+    private final AtomicLong listaDeseosSeq   = new AtomicLong(1);
+    private final AtomicLong pedidoSeq        = new AtomicLong(1);
+    private final AtomicLong itemPedidoSeq    = new AtomicLong(1);
+    private final AtomicLong transaccionSeq   = new AtomicLong(1);
+
+    public long nextProductoId()    { return productoSeq.getAndIncrement(); }
+    public long nextCuponId()       { return cuponSeq.getAndIncrement(); }
+    public long nextDireccionId()   { return direccionSeq.getAndIncrement(); }
+    public long nextEnvioId()       { return envioSeq.getAndIncrement(); }
+    public long nextUsuarioId()     { return usuarioSeq.getAndIncrement(); }
+    public long nextListaDeseosId() { return listaDeseosSeq.getAndIncrement(); }
+    public long nextPedidoId()      { return pedidoSeq.getAndIncrement(); }
+    public long nextItemPedidoId()  { return itemPedidoSeq.getAndIncrement(); }
+    public long nextTransaccionId() { return transaccionSeq.getAndIncrement(); }
+
+    // ====== Singleton ======
     private static final InMemoryContext INSTANCE = new InMemoryContext();
+    private InMemoryContext() {}
+    public static InMemoryContext getInstance() { return INSTANCE; }
 
-    //Constructor privado para evitar que se creen nuevas instancias desde fuera.
-    private InMemoryContext() { }
+    // ====== Getters como LISTA (copias para lectura) ======
+    public List<Producto> getProductos() {
+        return new ArrayList<>(productos.values());
+    }
+    public List<Cupon> getCupones() { return new ArrayList<>(cupones.values()); }
+    public List<Direccion> getDirecciones() { return new ArrayList<>(direcciones.values()); }
+    public List<Envio> getEnvios() { return new ArrayList<>(envios.values()); }
+    public List<Usuario> getUsuarios() { return new ArrayList<>(usuarios.values()); }
+    public List<ListaDeseos> getListasDeseos() { return new ArrayList<>(listasDeseos.values()); }
+    public List<Pedido> getPedidos() { return new ArrayList<>(pedidos.values()); }
+    public List<ItemPedido> getItemsPedido() { return new ArrayList<>(itemsPedido.values()); }
+    public List<TransaccionPago> getTransacciones() { return new ArrayList<>(transacciones.values()); }
 
-    // Metodo estatico para obtener la unica instancia disponible de InMemoryContext.
-    public static InMemoryContext getInstance() {
-        return INSTANCE;
+    // ====== Helpers específicos para Producto (lectura/escritura “real” en el Map) ======
+    public Producto saveProducto(Producto p) {
+        if (p.getId() == null) {
+            p.setId(nextProductoId());
+        }
+        productos.put(p.getId(), p);
+        return p;
+    }
+
+    public Producto findProductoById(Long id) {
+        return productos.get(id);
+    }
+
+    public void deleteProductoById(Long id) {
+        productos.remove(id);
     }
 }

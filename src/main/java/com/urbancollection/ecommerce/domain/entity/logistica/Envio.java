@@ -1,26 +1,47 @@
 package com.urbancollection.ecommerce.domain.entity.logistica;
 
 import com.urbancollection.ecommerce.domain.base.BaseEntity;
+import com.urbancollection.ecommerce.domain.entity.ventas.Pedido;
+import com.urbancollection.ecommerce.domain.enums.EstadoDeEnvio;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
- * Esta clase representa la informacion relacionada
- * con el proceso de entrega de un pedido en el sistema.
- *
- * Hereda de BaseEntity, por lo que incluye un id unico.
- *
- * En una version completa podria contener campos como:
- * - fechaEnvio: fecha en que se envio el pedido
- * - estado: estado actual del envio (ej. En camino, Entregado)
- * - direccion: referencia a la direccion de entrega
- *
- * Esta entidad permite gestionar y registrar los envios
- * realizados a los clientes.
+ * Entidad: Envio
+ * Representa un envio asociado a un pedido (tracking, estado y pedido vinculado).
  */
 public class Envio extends BaseEntity {
-    // Ejemplo de campos posibles:
-    // private Date fechaEnvio;
-    // private String estado;
-    // private Direccion direccion;
 
-    // Se pueden agregar los getters y setters correspondientes.
+    @NotNull(message = "El pedido es obligatorio")
+    private Pedido pedido;
+
+    @NotBlank(message = "El tracking es obligatorio")
+    @Size(max = 100, message = "El tracking no puede exceder 100 caracteres")
+    private String tracking;
+
+    @NotNull(message = "El estado de envio es obligatorio")
+    private EstadoDeEnvio estado;
+
+    public Envio() {}
+
+    public Pedido getPedido() { return pedido; }
+    public void setPedido(Pedido pedido) { this.pedido = pedido; }
+
+    public String getTracking() { return tracking; }
+    public void setTracking(String tracking) { this.tracking = tracking; }
+
+    public EstadoDeEnvio getEstado() { return estado; }
+    public void setEstado(EstadoDeEnvio estado) { this.estado = estado; }
+
+    @Override
+    public String toString() {
+        return "Envio{" +
+                "id=" + getId() +
+                ", pedidoId=" + (pedido != null ? pedido.getId() : null) +
+                ", tracking='" + tracking + '\'' +
+                ", estado=" + estado +
+                '}';
+    }
 }

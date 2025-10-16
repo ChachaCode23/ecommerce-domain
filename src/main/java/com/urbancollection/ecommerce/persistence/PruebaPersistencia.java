@@ -6,39 +6,55 @@ import java.util.List;
 import com.urbancollection.ecommerce.domain.entity.catalogo.Producto;
 import com.urbancollection.ecommerce.persistence.repositories.ProductoRepositoryImpl;
 
-/**
- * Esta clasela cree para probar la funcionalidad de la capa de persistencia en memoria.
- * Permite realizar operaciones CRUD (crear, leer, listar y eliminar) sobre la entidad Producto.
- * 
- * Es una forma simple de validar que los repositorios funcionan correctamente
- * sin necesidad de usar una base de datos real.
- */
 public class PruebaPersistencia {
 
     public static void main(String[] args) {
-
-        // Se crea una instancia del repositorio de productos
         ProductoRepositoryImpl repo = new ProductoRepositoryImpl();
 
-        // Se crea un nuevo producto
+        // 1) CREAR
         Producto p = new Producto();
         p.setNombre("Gorra");
         p.setDescripcion("Gorra negra de 47 con logo bordado");
-        p.setPrecio(new BigDecimal("950.00")); // Precio
+        p.setPrecio(new BigDecimal("950.00"));
+        p.setStock(10);
 
-        // Guardar el producto en memoria
         repo.save(p);
 
-        // Buscar el producto por su ID
-        Producto buscado = repo.findById(p.getId());
-        System.out.println("Producto encontrado: " + buscado.getNombre());
+        // Asegura que el repositorio haya asignado un ID
+        Long id = p.getId();
+        if (id == null) {
+            System.out.println("❌ ERROR: El repositorio no asignó ID al guardar el producto.");
+            return;
+        }
+        System.out.println("✅ Creado producto id=" + id);
 
-        // Lista de todos los productos almacenados
+        // 2) BUSCAR POR ID (seguro)
+        Producto buscado = repo.findById(id);
+        if (buscado == null) {
+            System.out.println("❌ Producto no encontrado por id=" + id);
+            return;
+        }
+        System.out.println("🔎 Encontrado: " + buscado.getNombre() + " | $" + buscado.getPrecio());
+
+        // 3) LISTAR
         List<Producto> lista = repo.findAll();
-        System.out.println("Total de productos: " + lista.size());
+        System.out.println("📦 Total productos: " + lista.size());
+        for (Producto it : lista) {
+            System.out.println(" - id=" + it.getId() + " | " + it.getNombre() + " | $" + it.getPrecio());
+        }
 
-        // Elimina el producto por su ID
-        repo.delete(p.getId());
-        System.out.println("Producto eliminado. Total actual: " + repo.findAll().size());
+        // 4) ACTUALIZAR (ejemplo: cambiar precio y stock)
+        buscado.setPrecio(new BigDecimal("899.00"));
+        buscado.setStock(8);
+        repo.save(buscado);
+
+        Producto actualizado = repo.findById(id);
+        System.out.println("♻️ Actualizado: id=" + actualizado.getId()
+                + " | precio=" + actualizado.getPrecio()
+                + " | stock=" + actualizado.getStock());
+
+        // 5) ELIMINAR
+        repo.delete(id);
+        System.out.println("🗑️ Eliminado id=" + id + ". Total ahora: " + repo.findAll().size());
     }
 }
