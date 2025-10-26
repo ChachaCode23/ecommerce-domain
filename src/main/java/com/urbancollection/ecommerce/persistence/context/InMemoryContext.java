@@ -33,6 +33,25 @@ public final class InMemoryContext {
     // Usuarios
     public final Map<Long, Usuario>     usuarios     = new ConcurrentHashMap<>();
     public final Map<Long, ListaDeseos> listasDeseos = new ConcurrentHashMap<>();
+ // en com.urbancollection.ecommerce.persistence.context.InMemoryContext
+    public Map<Long, Usuario> getUsuariosStore() {
+        return this.usuarios; // el mapa interno donde guardas los usuarios
+    }
+
+ // com/urbancollection/ecommerce/persistence/context/InMemoryContext.java
+ // ...
+ private final java.util.concurrent.ConcurrentHashMap<Long, com.urbancollection.ecommerce.domain.entity.ventas.ItemPedido> itemsPedidoStore
+         = new java.util.concurrent.ConcurrentHashMap<>();
+
+ public Map<Long, com.urbancollection.ecommerce.domain.entity.ventas.ItemPedido> getItemsPedidoStore() {
+     return itemsPedidoStore;
+ }
+
+ // Si necesitas lista para lecturas rápidas:
+ public java.util.List<com.urbancollection.ecommerce.domain.entity.ventas.ItemPedido> getItemsPedido1() {
+     return new java.util.ArrayList<>(itemsPedidoStore.values());
+ }
+
 
     // Ventas
     public final Map<Long, Pedido>          pedidos       = new ConcurrentHashMap<>();

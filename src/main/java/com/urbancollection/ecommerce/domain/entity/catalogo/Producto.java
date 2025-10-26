@@ -1,44 +1,109 @@
 package com.urbancollection.ecommerce.domain.entity.catalogo;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
-import com.urbancollection.ecommerce.domain.base.BaseEntity;
+@Entity
+@Table(name = "producto", schema = "core")
+public class Producto {
 
-// Bean Validation (Jakarta)
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "producto_id")
+    private Long id;
 
-/**
- * Esta clase representa un artículo disponible dentro del catálogo del sistema.
- * Hereda de BaseEntity para obtener el identificador único (id).
- */
-public class Producto extends BaseEntity {
-
-    @NotBlank(message = "El nombre es obligatorio")
+    @NotBlank
+    @Column(name = "nombre", nullable = false, length = 255)
     private String nombre;
 
-    @Size(max = 500, message = "La descripcion no puede exceder 500 caracteres")
+    @Column(name = "descripcion")
     private String descripcion;
 
-    @NotNull(message = "El precio es obligatorio")
-    @DecimalMin(value = "0.01", message = "El precio debe ser mayor que 0")
+    @NotNull
+    @DecimalMin("0.00")
+    @Column(name = "precio", nullable = false, precision = 19, scale = 2)
     private BigDecimal precio;
 
-    @Min(value = 0, message = "El stock no puede ser negativo")
+    @Min(0)
+    @Column(name = "stock", nullable = false)
     private int stock;
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    @Column(name = "sku", nullable = false, unique = true, length = 64)
+    private String sku;
 
-    public String getDescripcion() { return descripcion; }
-    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+    // ===================== LIFECYCLE HOOK =====================
+    // Antes de insertar, garantizamos SKU != null
+    @PrePersist
+    public void prePersist() {
+        if (sku == null || sku.isBlank()) {
+            this.sku = generarSkuInterno();
+        }
+    }
 
-    public BigDecimal getPrecio() { return precio; }
-    public void setPrecio(BigDecimal precio) { this.precio = precio; }
+    // ===================== HELPERS =====================
+    private String generarSkuInterno() {
+        // Usa el nombre como base, limpia caracteres raros, corta a 6 chars
+        String base = (nombre != null ? nombre : "PROD")
+                .replaceAll("[^A-Za-z0-9]", "")
+                .toUpperCase();
 
-    public int getStock() { return stock; }
-    public void setStock(int stock) { this.stock = stock; }
+        if (base.length() > 6) {
+            base = base.substring(0, 6);
+        }
+
+        // timestamp en base36 para hacerlo corto pero único-ish
+        String ts36 = Long.toString(System.currentTimeMillis(), 36).toUpperCase();
+
+        return base + "-" + ts36;
+    }
+
+    // ===================== GETTERS / SETTERS =====================
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
+    public BigDecimal getPrecio() {
+        return precio;
+    }
+
+    public void setPrecio(BigDecimal precio) {
+        this.precio = precio;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    public void setStock(int stock) {
+        this.stock = stock;
+    }
+
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
+    }
 }

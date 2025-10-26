@@ -1,22 +1,44 @@
 package com.urbancollection.ecommerce.persistence.repositories;
 
-import java.util.Map;
-
 import com.urbancollection.ecommerce.domain.entity.ventas.ItemPedido;
 import com.urbancollection.ecommerce.domain.repository.ItemPedidoRepository;
-import com.urbancollection.ecommerce.persistence.base.BaseRepository;
-import com.urbancollection.ecommerce.persistence.context.InMemoryContext;
+
+import java.util.List;
 
 /**
- * Implementacin en memoria del repositorio de ItemPedido.
- * 
- * Permite almacenar, buscar, eliminar y listar items de pedido
- * usando una estructura en memoria.
+ * Implementación in-memory / legacy.
+ * Esta clase existe solo para cumplir la interfaz en el módulo domain.
+ * La implementación REAL que usa Spring Data es ItemPedidoRepositoryJpaAdapter
+ * en el módulo ecommerce-api.
+ *
+ * Ninguno de estos métodos debería llamarse en producción.
  */
-public class ItemPedidoRepositoryImpl extends BaseRepository<ItemPedido> implements ItemPedidoRepository {
+public class ItemPedidoRepositoryImpl implements ItemPedidoRepository {
 
     @Override
-    protected Map<Long, ItemPedido> store(InMemoryContext ctx) {
-        return ctx.itemsPedido;
+    public ItemPedido save(ItemPedido itemPedido) {
+        throw new UnsupportedOperationException("In-memory ItemPedidoRepositoryImpl no está soportado aquí.");
+    }
+
+    @Override
+    public ItemPedido findById(Long id) {
+        throw new UnsupportedOperationException("In-memory ItemPedidoRepositoryImpl no está soportado aquí.");
+    }
+
+    @Override
+    public List<ItemPedido> findAll() {
+        throw new UnsupportedOperationException("In-memory ItemPedidoRepositoryImpl no está soportado aquí.");
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        throw new UnsupportedOperationException("In-memory ItemPedidoRepositoryImpl no está soportado aquí.");
+    }
+
+    // Helper extra que tu código usa en algunos sitios.
+    // No forma parte del contrato de ItemPedidoRepository, pero lo dejamos
+    // para que compile cualquier llamada que ya exista.
+    public boolean existsByProductoId(Long productoId) {
+        throw new UnsupportedOperationException("In-memory ItemPedidoRepositoryImpl no está soportado aquí.");
     }
 }

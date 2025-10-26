@@ -1,41 +1,79 @@
 package com.urbancollection.ecommerce.domain.entity.usuarios;
 
-import com.urbancollection.ecommerce.domain.base.BaseEntity;
-
-// Bean Validation (Jakarta)
+import com.urbancollection.ecommerce.domain.base.BaseEntity; // <-- tu BaseEntity
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Mapea a core.Usuario
+ * PK real = usuario_id
+ */
+@Entity
+@Table(
+        name = "Usuario",
+        schema = "core",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "UQ__Usuario__Email",
+                        columnNames = "email"
+                )
+        },
+        indexes = {
+                @Index(name = "IX_Usuario_Email", columnList = "email")
+        }
+)
+@AttributeOverride(name = "id", column = @Column(name = "usuario_id"))
 public class Usuario extends BaseEntity {
 
-    @NotBlank(message = "El nombre es obligatorio")
-    @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
+    @NotBlank
+    @Size(max = 150)
+    @Column(name = "nombre", length = 150, nullable = false)
     private String nombre;
 
-    @NotBlank(message = "El correo es obligatorio")
-    @Email(message = "El correo no tiene un formato valido")
-    @Size(max = 150, message = "El correo no puede exceder 150 caracteres")
-    private String correo;
+    @NotBlank
+    @Email
+    @Size(max = 150)
+    @Column(name = "email", length = 150, nullable = false)
+    private String correo; // en DB la columna se llama email
 
-    @NotBlank(message = "La contrasena es obligatoria")
-    @Size(min = 6, max = 100, message = "La contrasena debe tener entre 6 y 100 caracteres")
-    private String contrasena;
+    @Size(max = 255)
+    @Column(name = "hash_password", length = 255)
+    private String contrasena; // en DB es hash_password
 
-    @NotBlank(message = "El rol es obligatorio")
-    @Size(max = 30, message = "El rol no puede exceder 30 caracteres")
-    private String rol;
+    @NotBlank
+    @Size(max = 20)
+    @Column(name = "rol", length = 20, nullable = false)
+    private String rol; // 'CUSTOMER' / 'ADMIN'
 
-    // Getters / Setters
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    // ===== getters / setters =====
 
-    public String getCorreo() { return correo; }
-    public void setCorreo(String correo) { this.correo = correo; }
+    public String getNombre() {
+        return nombre;
+    }
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 
-    public String getContrasena() { return contrasena; }
-    public void setContrasena(String contrasena) { this.contrasena = contrasena; }
+    public String getCorreo() {
+        return correo;
+    }
+    public void setCorreo(String correo) {
+        this.correo = correo;
+    }
 
-    public String getRol() { return rol; }
-    public void setRol(String rol) { this.rol = rol; }
+    public String getContrasena() {
+        return contrasena;
+    }
+    public void setContrasena(String contrasena) {
+        this.contrasena = contrasena;
+    }
+
+    public String getRol() {
+        return rol;
+    }
+    public void setRol(String rol) {
+        this.rol = rol;
+    }
 }

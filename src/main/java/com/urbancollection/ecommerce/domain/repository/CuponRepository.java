@@ -1,15 +1,19 @@
 package com.urbancollection.ecommerce.domain.repository;
 
 import com.urbancollection.ecommerce.domain.entity.catalogo.Cupon;
+import java.util.List;
 
 /**
- * Esta interfaz extiende de IBaseRepository y se utiliza
- * para definir las operaciones CRUD que se pueden realizar
- * sobre la entidad Cupon.
- *
- * Si en el futuro se necesitan metodos adicionales
- * especificos para los cupones, pueden agregarse aqui.
+ * Puerto de dominio para Cupon.
+ * No usar anotaciones de Spring aquí.
  */
-public interface CuponRepository extends IBaseRepository<Cupon, Long> {
-    // Metodos personalizados de Cupon pueden definirse aqui
+public interface CuponRepository {
+
+    Cupon save(Cupon cupon);
+
+    Cupon findById(Long id);
+
+    List<Cupon> findAll();
+
+    void deleteById(Long id);
 }

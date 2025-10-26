@@ -1,41 +1,79 @@
 package com.urbancollection.ecommerce.domain.entity.ventas;
 
 import com.urbancollection.ecommerce.domain.base.BaseEntity;
-import com.urbancollection.ecommerce.domain.entity.usuarios.Usuario;
 import com.urbancollection.ecommerce.domain.entity.logistica.Direccion;
+import com.urbancollection.ecommerce.domain.entity.usuarios.Usuario;
 import com.urbancollection.ecommerce.domain.enums.EstadoDePedido;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-// Bean Validation (Jakarta)
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-
+/**
+ * Mapea a core.Pedido
+ * PK real = pedido_id
+ *
+ * direccion_envio_id en DB -> direccionEntrega aquí
+ */
+@Entity
+@Table(name = "Pedido", schema = "core")
+@AttributeOverride(name = "id", column = @Column(name = "pedido_id"))
 public class Pedido extends BaseEntity {
 
-    @NotNull(message = "El usuario es obligatorio")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-    @NotNull(message = "La direccion de entrega es obligatoria")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "direccion_envio_id")
     private Direccion direccionEntrega;
 
-    @NotNull(message = "El estado del pedido es obligatorio")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", length = 20, nullable = false)
     private EstadoDePedido estado;
 
-    @NotNull(message = "El total es obligatorio")
-    @DecimalMin(value = "0.00", message = "El total no puede ser negativo")
+    @NotNull
+    @Column(name = "total", precision = 12, scale = 2, nullable = false)
     private BigDecimal total;
 
-    @NotNull(message = "La lista de items es obligatoria")
-    @Size(min = 1, message = "El pedido debe contener al menos un item")
-    @Valid
+    @OneToMany(
+            mappedBy = "pedido",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     private List<ItemPedido> items = new ArrayList<>();
 
-    // Getters / Setters
+    // ========== helpers IMPORTANTES ==========
+
+    // aseguramos la relación en ambos lados
+    public void addItem(ItemPedido item) {
+        if (this.items == null) {
+            this.items = new ArrayList<>();
+        }
+        this.items.add(item);
+        item.setPedido(this); // <- CLAVE para que pedido_id no sea NULL
+    }
+
+    public void removeItem(ItemPedido item) {
+        if (this.items == null) return;
+        this.items.remove(item);
+        item.setPedido(null);
+    }
+
+    // setItems ahora fuerza el link pedido <-> item
+    public void setItems(List<ItemPedido> items) {
+        this.items = new ArrayList<>();
+        if (items != null) {
+            for (ItemPedido it : items) {
+                addItem(it); // usa addItem(), así siempre setPedido(this)
+            }
+        }
+    }
+
+    // ========== getters / setters normales ==========
+
     public Usuario getUsuario() {
         return usuario;
     }
@@ -66,8 +104,5 @@ public class Pedido extends BaseEntity {
 
     public List<ItemPedido> getItems() {
         return items;
-    }
-    public void setItems(List<ItemPedido> items) {
-        this.items = items;
     }
 }

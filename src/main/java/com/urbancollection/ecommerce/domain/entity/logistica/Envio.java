@@ -8,20 +8,32 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-/**
- * Entidad: Envio
- * Representa un envio asociado a un pedido (tracking, estado y pedido vinculado).
- */
+// JPA
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
+
+@Entity
+@Table(name = "envios")
 public class Envio extends BaseEntity {
 
     @NotNull(message = "El pedido es obligatorio")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "pedido_id", nullable = false)
     private Pedido pedido;
 
     @NotBlank(message = "El tracking es obligatorio")
     @Size(max = 100, message = "El tracking no puede exceder 100 caracteres")
+    @Column(name = "tracking", length = 100, nullable = false, unique = true)
     private String tracking;
 
     @NotNull(message = "El estado de envio es obligatorio")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", length = 30, nullable = false)
     private EstadoDeEnvio estado;
 
     public Envio() {}

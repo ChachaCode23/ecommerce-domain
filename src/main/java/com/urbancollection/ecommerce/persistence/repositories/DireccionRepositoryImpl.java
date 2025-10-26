@@ -1,22 +1,35 @@
 package com.urbancollection.ecommerce.persistence.repositories;
 
-import java.util.Map;
+import java.util.Collections;
+import java.util.List;
 
 import com.urbancollection.ecommerce.domain.entity.logistica.Direccion;
 import com.urbancollection.ecommerce.domain.repository.DireccionRepository;
-import com.urbancollection.ecommerce.persistence.base.BaseRepository;
-import com.urbancollection.ecommerce.persistence.context.InMemoryContext;
 
 /**
- * Gestiona las operaciones CRUD usando el contexto en memoria.
- * Implementacion en memoria del repositorio de Direccion.
+ * Implementación dummy/legacy. Ya no se usa en runtime porque
+ * la implementación real es DireccionRepositoryJpaAdapter (en infraestructura).
+ * La dejamos solo para que el proyecto compile.
  */
-public class DireccionRepositoryImpl
-        extends BaseRepository<Direccion>
-        implements DireccionRepository {
+public class DireccionRepositoryImpl implements DireccionRepository {
 
     @Override
-    protected Map<Long, Direccion> store(InMemoryContext ctx) {
-        return ctx.direcciones;
+    public Direccion findById(Long id) {
+        throw new UnsupportedOperationException("DireccionRepositoryImpl ya no se usa");
+    }
+
+    @Override
+    public List<Direccion> findAll() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Direccion save(Direccion direccion) {
+        throw new UnsupportedOperationException("DireccionRepositoryImpl ya no se usa");
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        throw new UnsupportedOperationException("DireccionRepositoryImpl ya no se usa");
     }
 }

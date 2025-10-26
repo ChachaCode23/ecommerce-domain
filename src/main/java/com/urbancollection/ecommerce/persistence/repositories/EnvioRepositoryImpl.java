@@ -19,4 +19,10 @@ public class EnvioRepositoryImpl
     protected Map<Long, Envio> store(InMemoryContext ctx) {
         return ctx.envios;
     }
+
+	@Override
+	public void deleteById(Long id) {
+		// TODO Auto-generated method stub
+		
+	}
 }

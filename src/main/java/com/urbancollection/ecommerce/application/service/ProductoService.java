@@ -1,223 +1,173 @@
 package com.urbancollection.ecommerce.application.service;
 
-import com.urbancollection.ecommerce.shared.BaseService;   
-import com.urbancollection.ecommerce.shared.ValidationUtil; 
-
-import com.urbancollection.ecommerce.application.dto.ProductoDTO;     
-import com.urbancollection.ecommerce.application.mapper.ProductoMapper; 
-
-import com.urbancollection.ecommerce.domain.base.OperationResult; 
-import com.urbancollection.ecommerce.domain.entity.catalogo.Producto; 
-import com.urbancollection.ecommerce.domain.repository.ProductoRepository;
-
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
-/**
- * Servicio de aplicación para gestionar Productos.
- * - Herencia: extiende BaseService para usar logger y manejo centralizado de errores.
- * - NO cambia las entidades: solo valida, mapea a DTO y llama al repositorio.
- */
+import jakarta.transaction.Transactional;
+
+import com.urbancollection.ecommerce.domain.base.OperationResult;
+import com.urbancollection.ecommerce.domain.entity.catalogo.Producto;
+import com.urbancollection.ecommerce.domain.repository.ProductoRepository;
+import com.urbancollection.ecommerce.shared.BaseService;
+import com.urbancollection.ecommerce.shared.logging.LoggerPort;
+import com.urbancollection.ecommerce.shared.tasks.TaskListPort;
+
 public class ProductoService extends BaseService {
 
-    // Dependencia a la capa de datos.
     private final ProductoRepository productoRepository;
+    private final LoggerPort logger;
+    private final TaskListPort taskList;
 
-    public ProductoService(ProductoRepository productoRepository) {
+    public ProductoService(
+            ProductoRepository productoRepository,
+            LoggerPort logger,
+            TaskListPort taskList
+    ) {
         this.productoRepository = productoRepository;
+        this.logger = logger;
+        this.taskList = taskList;
     }
 
-    /** 
-     * Convierte un Producto a DTO usando el Mapper.
-     * - Responsabilidad: aislar la conversión en un único punto del servicio.
-     * - try/catch: por si algo falla en el mapeo (evitar romper el flujo).
+    // ================== QUERIES ==================
+
+    public List<Producto> listarProductos() {
+        return productoRepository.findAll();
+    }
+
+    public Producto obtenerProductoPorId(Long id) {
+        if (id == null || id <= 0) {
+            return null;
+        }
+        return productoRepository.findById(id);
+    }
+
+    // ================== COMMANDS ==================
+
+    /**
+     * Crea un producto nuevo
      */
-    public ProductoDTO getModel(Producto producto) {
-        try {
-            return ProductoMapper.toDTO(producto); // Llama al mapper.
-        } catch (Exception e) {
-            handleError(e, "Error al generar el modelo DTO de Producto"); // Log + manejo de error centralizado.
-            return null; // En caso de error, retorna null.
-        }
-    }
+    @Transactional
+    public Producto crearProducto(String nombre,
+                                  String descripcion,
+                                  BigDecimal precio,
+                                  int stockInicial) {
 
-    //aqui se obtienen todos los productos en formato DTO.
-
-    public List<ProductoDTO> listar() {
-        try {
-            List<Producto> productos = productoRepository.findAll(); // Consulta todos los productos.
-            return productos.stream()
-                    .map(ProductoMapper::toDTO) // Mapea cada entidad a DTO.
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            handleError(e, "Error al listar productos"); // Log + manejo de error.
-            return java.util.Collections.emptyList(); // Fallback seguro.
+        if (nombre == null || nombre.isBlank()) {
+            logger.warn("crearProducto rechazado: nombre vacío");
+            return null;
         }
+        if (precio == null || precio.compareTo(BigDecimal.ZERO) < 0) {
+            logger.warn("crearProducto rechazado: precio negativo {}", precio);
+            return null;
+        }
+        if (stockInicial < 0) {
+            logger.warn("crearProducto rechazado: stock negativo {}", stockInicial);
+            return null;
+        }
+
+        Producto p = new Producto();
+        p.setNombre(nombre);
+        p.setDescripcion(descripcion);
+        p.setPrecio(precio);
+        p.setStock(stockInicial);
+
+        // IMPORTANTE: en tu DB la columna sku es NOT NULL
+        String generatedSku = (nombre.trim() + "-" + System.currentTimeMillis()).toUpperCase();
+        p.setSku(generatedSku);
+
+        Producto saved = productoRepository.save(p);
+
+        logger.info("Producto creado id={} sku={}", saved.getId(), saved.getSku());
+
+        if (saved.getStock() < 5) {
+            taskList.enqueue(
+                "REVISAR_STOCK",
+                "Stock inicial bajo en producto " + saved.getId() + " (" + saved.getNombre() + ")"
+            );
+        }
+
+        return saved;
     }
 
     /**
-     * Buscar un producto por ID y retornarlo como DTO.
-     * - Nota: el repositorio devuelve Producto (no Optional), por eso aquí envolvemos manualmente.
-     * - Retorna Optional.empty() si no existe.
+     * Actualiza el stock (setea a nuevoStock)
      */
-    public Optional<ProductoDTO> buscarPorId(Long id) {
-        try {
-            Producto producto = productoRepository.findById(id); // Busca por ID (puede ser null si no existe).
-            if (producto == null) return Optional.empty();
-            return Optional.of(ProductoMapper.toDTO(producto)); // Lo convertimos a DTO si existe.
-        } catch (Exception e) {
-            handleError(e, "Error al buscar producto por id");
-            return Optional.empty(); // En error, también devuelve vacío.
+    @Transactional
+    public Producto actualizarStock(Long productoId, Integer nuevoStock) {
+        if (productoId == null || productoId <= 0) {
+            logger.warn("actualizarStock rechazado: productoId invalido {}", productoId);
+            return null;
         }
-    }
-
-    //Aqui se Crea un nuevo producto.
-
-    public OperationResult crear(Producto nuevo) {
-        try {
-            normalizar(nuevo); // Limpieza previa (ej: quitar espacios en el nombre).
-
-            // Valida el DTO (usando el mapper para construirlo desde la entidad).
-            ProductoDTO dto = ProductoMapper.toDTO(nuevo);
-            OperationResult dtoCheck = ValidationUtil.validate(dto);
-            if (!dtoCheck.isSuccess()) return dtoCheck; // Si falla, cortar aquí.
-
-            // Valida la Entidad.
-            OperationResult entityCheck = ValidationUtil.validate(nuevo);
-            if (!entityCheck.isSuccess()) return entityCheck;
-
-            //Validaciones manuales de campos (extra a las anotaciones).
-            OperationResult valid = validarCamposProducto(nuevo);
-            if (!valid.isSuccess()) return valid;
-
-            // Reglas de negocio para creación (ej: nombre único).
-            OperationResult reglas = validarNegocioCrear(nuevo);
-            if (!reglas.isSuccess()) return reglas;
-
-            //Guarda en la BD.
-            productoRepository.save(nuevo);
-            logger.info("Producto creado: {}", nuevo.getNombre()); // Log de auditoría.
-            return OperationResult.success("Producto creado correctamente");
-        } catch (Exception e) {
-            handleError(e, "Error al crear producto"); // Manejo centralizado de errores.
-            return OperationResult.failure("No se pudo crear el producto");
+        if (nuevoStock == null || nuevoStock < 0) {
+            logger.warn("actualizarStock rechazado: stock invalido {}", nuevoStock);
+            return null;
         }
-    }
 
-    // Aqui Actualizamos un producto existente.
-
-    public OperationResult actualizar(Long id, Producto cambios) {
-        try {
-            Producto existente = productoRepository.findById(id); //Carga desde BD.
-            if (existente == null) return OperationResult.failure("Producto no encontrado");
-
-            normalizar(cambios); //Limpieza de entradas.
-
-            // Valida DTO (construido a partir de los cambios).
-            ProductoDTO dtoCambios = ProductoMapper.toDTO(cambios);
-            OperationResult dtoCheck = ValidationUtil.validate(dtoCambios);
-            if (!dtoCheck.isSuccess()) return dtoCheck;
-
-            //Valida Entidad (cambios completos sobre el objeto).
-            OperationResult entityCheck = ValidationUtil.validate(cambios);
-            if (!entityCheck.isSuccess()) return entityCheck;
-
-            //Validaciones manuales + Reglas de negocio de actualización.
-            OperationResult valid = validarCamposProducto(cambios);
-            if (!valid.isSuccess()) return valid;
-
-            OperationResult reglas = validarNegocioActualizar(existente, cambios);
-            if (!reglas.isSuccess()) return reglas;
-
-            //Aplica cambios puntuales (solo actualiza campos).
-            existente.setNombre(cambios.getNombre());
-            existente.setPrecio(cambios.getPrecio());
-            existente.setStock(cambios.getStock());
-            productoRepository.save(existente); // Guardar cambios en la BD.
-
-            logger.info("Producto actualizado: {}", existente.getNombre());
-            return OperationResult.success("Producto actualizado correctamente");
-        } catch (Exception e) {
-            handleError(e, "Error al actualizar producto");
-            return OperationResult.failure("No se pudo actualizar el producto");
+        Producto existente = productoRepository.findById(productoId);
+        if (existente == null) {
+            logger.warn("actualizarStock: producto {} no encontrado", productoId);
+            return null;
         }
+
+        existente.setStock(nuevoStock);
+        Producto actualizado = productoRepository.save(existente);
+
+        logger.info("Stock actualizado producto={} stock={}", productoId, nuevoStock);
+
+        if (nuevoStock < 5) {
+            taskList.enqueue(
+                "REVISAR_STOCK",
+                "Stock crítico en producto " + productoId + " -> " + nuevoStock
+            );
+        }
+
+        return actualizado;
     }
 
     /**
-     * Elimina un producto por ID.
-     * - Primero verifica existencia para poder responder con mensaje claro.
-     * - Si existe, elimina y registra log.
+     * Borra un producto por ID
      */
-    public OperationResult eliminar(Long id) {
-        try {
-            Producto existente = productoRepository.findById(id); // Verifica si existe.
-            if (existente == null) return OperationResult.failure("Producto no encontrado");
-            productoRepository.delete(id); // Elimina en la BD.
-            logger.info("Producto eliminado id={}", id); // Log de auditoría.
-            return OperationResult.success("Producto eliminado correctamente");
-        } catch (Exception e) {
-            handleError(e, "Error al eliminar producto");
+    @Transactional
+    public boolean eliminarProducto(Long productoId) {
+        if (productoId == null || productoId <= 0) {
+            logger.warn("eliminarProducto rechazado: productoId invalido {}", productoId);
+            return false;
+        }
+
+        Producto existente = productoRepository.findById(productoId);
+        if (existente == null) {
+            logger.warn("eliminarProducto: producto {} no existe", productoId);
+            return false;
+        }
+
+        // tu ProductoRepository debe tener algo tipo delete(Long id)
+        productoRepository.delete(productoId);
+
+        logger.info("Producto eliminado id={}", productoId);
+
+        taskList.enqueue(
+            "AUDITORIA_BAJA_PRODUCTO",
+            "Se eliminó el producto " + productoId + " (" + existente.getNombre() + ")"
+        );
+
+        return true;
+    }
+
+    // ===== helpers que usa el controller para empaquetar respuesta =====
+
+    public OperationResult toResult(Producto p) {
+        if (p == null) {
+            return OperationResult.failure("Operación inválida o producto no encontrado");
+        }
+        // IMPORTANTE: OperationResult.success(...) en tu proyecto
+        // solo acepta mensaje (no acepta data extra).
+        return OperationResult.success("ok");
+    }
+
+    public OperationResult toDeleteResult(boolean ok) {
+        if (!ok) {
             return OperationResult.failure("No se pudo eliminar el producto");
         }
-    }
-
-
-    /**
-     * Aqui hacemos validaciones manuales de los atributos basicos del producto.
-     * - Nombre: requerido y no vacío.
-     * - Precio: > 0.
-     * - Stock: no negativo.
-     * Devuelve OperationResult con "OK" si todo está bien.
-     */
-    private OperationResult validarCamposProducto(Producto p) {
-        if (p == null) return OperationResult.failure("Producto requerido");
-        if (p.getNombre() == null || p.getNombre().trim().isEmpty())
-            return OperationResult.failure("El nombre es obligatorio");
-
-        BigDecimal precio = p.getPrecio();
-        if (precio == null || precio.compareTo(BigDecimal.ZERO) <= 0)
-            return OperationResult.failure("El precio debe ser mayor que 0");
-
-        if (p.getStock() < 0)
-            return OperationResult.failure("El stock no puede ser negativo");
-
-        return OperationResult.success("OK"); // Todo correcto.
-    }
-
-
-    // Validaciones de negocio
-    /**
-     * - Evitamos duplicados por nombre (case-insensitive).
-     */
-    private OperationResult validarNegocioCrear(Producto p) {
-        boolean duplicado = productoRepository.findAll().stream()
-                .anyMatch(x -> x.getNombre().equalsIgnoreCase(p.getNombre())); // Compara ignorando may/min.
-        if (duplicado) return OperationResult.failure("Ya existe un producto con ese nombre");
-        return OperationResult.success("OK");
-    }
-
-    /**
-     * - Si el nombre cambio, volver a verificar duplicados por nombre.
-     */
-    private OperationResult validarNegocioActualizar(Producto existente, Producto cambios) {
-        if (!existente.getNombre().equalsIgnoreCase(cambios.getNombre())) {
-            boolean duplicado = productoRepository.findAll().stream()
-                    .anyMatch(x -> x.getNombre().equalsIgnoreCase(cambios.getNombre()));
-            if (duplicado) return OperationResult.failure("Ya existe otro producto con ese nombre");
-        }
-        return OperationResult.success("OK");
-    }
-
-
-    /**
-     * - Limpia entradas tipicas antes de validar/guardar.
-     * - Aquí aplicamos trim() al nombre para evitar espacios extra.
-     */
-    private void normalizar(Producto p) {
-        if (p != null && p.getNombre() != null) {
-            p.setNombre(p.getNombre().trim()); // Quita espacios al inicio/fin.
-        }
+        return OperationResult.success("Producto eliminado");
     }
 }

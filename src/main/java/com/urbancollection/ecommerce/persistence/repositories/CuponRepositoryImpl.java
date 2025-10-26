@@ -19,4 +19,10 @@ public class CuponRepositoryImpl
     protected Map<Long, Cupon> store(InMemoryContext ctx) {
         return ctx.cupones;
     }
+
+	@Override
+	public void deleteById(Long id) {
+		// TODO Auto-generated method stub
+		
+	}
 }

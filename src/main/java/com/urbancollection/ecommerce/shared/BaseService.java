@@ -1,25 +1,25 @@
 package com.urbancollection.ecommerce.shared;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.urbancollection.ecommerce.shared.logging.LoggerPort;
 
 /**
- * clase base para servicios
- * Contiene un Logger para registrar información y errores,
- * y un metodo de manejo de excepciones para evitar repetir codigo.
+ * BaseService
+ * - NO depende de SLF4J (solo de la abstracción LoggerPort).
+ * - Las implementaciones concretas del logger se inyectan desde "infrastructure".
  */
 public abstract class BaseService {
 
-    //Logger para todas las clases que hereden de esta
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
+    protected LoggerPort logger;
 
-    /**
-     * Metodo centralizado para manejar errores.
-     * este metodo nos muestra un mensaje claro y registrar el detalle del error.
-     */
+    /** Permite inyectar el logger adapter (p. ej., Slf4jLoggerAdapter) desde Infrastructure. */
+    public void setLogger(LoggerPort logger) {
+        this.logger = logger;
+    }
+
+    /** Manejo centralizado de errores: registra y deja listo para extender. */
     protected void handleError(Exception e, String message) {
-        // Muestra en consola un mensaje personalizado + el error real
-        logger.error("❌ {} - Detalle: {}", message, e.getMessage());
-
+        if (logger != null) {
+            logger.error("{}: {}", message, e.getMessage());
+        }
     }
 }

@@ -2,42 +2,66 @@ package com.urbancollection.ecommerce.domain.entity.ventas;
 
 import com.urbancollection.ecommerce.domain.base.BaseEntity;
 import com.urbancollection.ecommerce.domain.entity.catalogo.Producto;
-
-import java.math.BigDecimal;
-
-// Bean Validation (Jakarta)
+import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
+import java.math.BigDecimal;
+
 /**
- * Representa un item dentro de un pedido (producto + cantidad).
+ * Mapea a core.ItemPedido
+ * PK = item_pedido_id
  */
+@Entity
+@Table(name = "ItemPedido", schema = "core")
+@AttributeOverride(name = "id", column = @Column(name = "item_pedido_id"))
 public class ItemPedido extends BaseEntity {
 
-    @NotNull(message = "El producto es obligatorio")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
-    @Min(value = 1, message = "La cantidad debe ser al menos 1")
+    @Min(1)
+    @Column(name = "cantidad", nullable = false)
     private int cantidad;
 
-    // No marcamos @NotNull porque normalmente el subtotal se calcula en el servicio.
-    @DecimalMin(value = "0.00", message = "El subtotal no puede ser negativo")
-    private BigDecimal subtotal;
+    @NotNull
+    @DecimalMin("0.00")
+    @Column(name = "precio_unitario", precision = 12, scale = 2, nullable = false)
+    private BigDecimal precioUnitario;
 
-    // No marcamos @NotNull: se vincula al crear el pedido en el servicio.
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "pedido_id", nullable = false)
     private Pedido pedido;
 
-    // Getters / Setters
-    public Producto getProducto() { return producto; }
-    public void setProducto(Producto producto) { this.producto = producto; }
+    // ===== getters / setters =====
 
-    public int getCantidad() { return cantidad; }
-    public void setCantidad(int cantidad) { this.cantidad = cantidad; }
+    public Producto getProducto() {
+        return producto;
+    }
+    public void setProducto(Producto producto) {
+        this.producto = producto;
+    }
 
-    public BigDecimal getSubtotal() { return subtotal; }
-    public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
+    public int getCantidad() {
+        return cantidad;
+    }
+    public void setCantidad(int cantidad) {
+        this.cantidad = cantidad;
+    }
 
-    public Pedido getPedido() { return pedido; }
-    public void setPedido(Pedido pedido) { this.pedido = pedido; }
+    public BigDecimal getPrecioUnitario() {
+        return precioUnitario;
+    }
+    public void setPrecioUnitario(BigDecimal precioUnitario) {
+        this.precioUnitario = precioUnitario;
+    }
+
+    public Pedido getPedido() {
+        return pedido;
+    }
+    public void setPedido(Pedido pedido) {
+        this.pedido = pedido;
+    }
 }
