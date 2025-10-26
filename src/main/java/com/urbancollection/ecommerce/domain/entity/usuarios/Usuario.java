@@ -1,14 +1,25 @@
 package com.urbancollection.ecommerce.domain.entity.usuarios;
 
-import com.urbancollection.ecommerce.domain.base.BaseEntity; // <-- tu BaseEntity
+import com.urbancollection.ecommerce.domain.base.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
- * Mapea a core.Usuario
- * PK real = usuario_id
+ * Usuario
+ *
+ * Esta entidad representa a un usuario del sistema (cliente o admin).
+ * Está mapeada a la tabla core.Usuario.
+ *
+ * - La PK real en la base es "usuario_id", no "id". Por eso usamos @AttributeOverride.
+ * - El campo "correo" en el código se guarda en la columna "email" de la BD.
+ * - La contraseña se guarda como hash (hash_password).
+ * - El rol indica el tipo de usuario (por ejemplo "CUSTOMER" o "ADMIN").
+ *
+ * Restricciones:
+ * - email es único (unique constraint + índice).
+ * - nombre, email y rol son obligatorios.
  */
 @Entity
 @Table(
@@ -36,11 +47,11 @@ public class Usuario extends BaseEntity {
     @Email
     @Size(max = 150)
     @Column(name = "email", length = 150, nullable = false)
-    private String correo; // en DB la columna se llama email
+    private String correo; // columna real = email
 
     @Size(max = 255)
     @Column(name = "hash_password", length = 255)
-    private String contrasena; // en DB es hash_password
+    private String contrasena; // columna real = hash_password
 
     @NotBlank
     @Size(max = 20)
@@ -48,7 +59,6 @@ public class Usuario extends BaseEntity {
     private String rol; // 'CUSTOMER' / 'ADMIN'
 
     // ===== getters / setters =====
-
     public String getNombre() {
         return nombre;
     }

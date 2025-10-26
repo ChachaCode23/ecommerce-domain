@@ -8,6 +8,20 @@ import com.urbancollection.ecommerce.domain.repository.UsuarioRepository;
 import com.urbancollection.ecommerce.persistence.base.BaseRepository;
 import com.urbancollection.ecommerce.persistence.context.InMemoryContext;
 
+/**
+ * UsuarioRepositoryImpl
+ *
+ * Implementación en memoria de UsuarioRepository.
+ * Hereda de BaseRepository<Usuario> para tener CRUD genérico básico
+ * (findById, findAll, save, delete...)
+ * y además agrega consultas específicas por correo.
+ *
+ * Internamente usamos InMemoryContext como "BD falsa" en RAM.
+ *
+ * Reglas importantes:
+ * - existsByCorreoIgnoreCase: se usa para validar que el correo no esté repetido.
+ * - findByCorreoIgnoreCase: se usa para buscar usuarios por email sin importar mayúsculas.
+ */
 public class UsuarioRepositoryImpl extends BaseRepository<Usuario> implements UsuarioRepository {
 
     @Override

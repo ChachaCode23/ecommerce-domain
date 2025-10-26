@@ -6,6 +6,22 @@ import com.urbancollection.ecommerce.domain.entity.usuarios.Usuario;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * ListaDeseos
+ *
+ * Esta entidad representa un producto que un usuario guardó en su "wishlist"
+ * (lista de deseos). Básicamente: "el usuario X marcó el producto Y como favorito".
+ *
+ * Tabla: lista_deseos
+ *
+ * Campos:
+ * - usuario: quién guardó el producto.
+ * - producto: qué producto guardó.
+ *
+ * Validaciones:
+ * - Ambos son obligatorios (@NotNull).
+ *
+ */
 @Entity
 @Table(name = "lista_deseos")
 public class ListaDeseos extends BaseEntity {

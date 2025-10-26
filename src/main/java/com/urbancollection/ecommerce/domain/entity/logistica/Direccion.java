@@ -5,8 +5,25 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
+/**
+ * Direccion
+ *
+ * Entidad que representa una dirección física de envío.
+ * Está mapeada a la tabla dbo.direcciones (nota: nombre en plural y schema dbo).
+ *
+ * Campos básicos:
+ *  - calle
+ *  - ciudad
+ *  - provincia
+ *  - código postal
+ *
+ * Esta info se usa cuando el usuario hace un pedido y el sistema necesita saber
+ * a dónde enviar el paquete.
+ *
+ * Hereda de BaseEntity.
+ */
 @Entity
-@Table(name = "direcciones", schema = "dbo") // OJO: plural y schema dbo
+@Table(name = "direcciones", schema = "dbo") // tabla "direcciones" en el schema dbo
 public class Direccion extends BaseEntity {
 
     @Column(name = "calle")
@@ -21,12 +38,10 @@ public class Direccion extends BaseEntity {
     @Column(name = "codigo_postal")
     private String codigoPostal;
 
-    // ===== getters & setters =====
-
+    // ===== Getters & Setters =====
     public String getCalle() {
         return calle;
     }
-
     public void setCalle(String calle) {
         this.calle = calle;
     }
@@ -34,7 +49,6 @@ public class Direccion extends BaseEntity {
     public String getCiudad() {
         return ciudad;
     }
-
     public void setCiudad(String ciudad) {
         this.ciudad = ciudad;
     }
@@ -42,7 +56,6 @@ public class Direccion extends BaseEntity {
     public String getProvincia() {
         return provincia;
     }
-
     public void setProvincia(String provincia) {
         this.provincia = provincia;
     }
@@ -50,7 +63,6 @@ public class Direccion extends BaseEntity {
     public String getCodigoPostal() {
         return codigoPostal;
     }
-
     public void setCodigoPostal(String codigoPostal) {
         this.codigoPostal = codigoPostal;
     }

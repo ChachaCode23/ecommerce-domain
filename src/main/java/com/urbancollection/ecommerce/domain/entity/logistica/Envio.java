@@ -8,7 +8,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-// JPA
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.Column;
@@ -17,6 +16,22 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
 
+/**
+ * Envio
+ *
+ * Representa el envío físico de un pedido.
+ * Esta clase guarda:
+ *  - a qué pedido pertenece el envío
+ *  - el código de tracking que se le da al cliente
+ *  - el estado actual del envío (por ejemplo EN_CAMINO)
+ *
+ * Validaciones:
+ *  - pedido no puede ser null (siempre debe estar asociado a un pedido real)
+ *  - tracking es obligatorio y único
+ *  - estado es obligatorio y es un enum controlado (EstadoDeEnvio)
+ *
+ * Se guarda en la tabla "envios".
+ */
 @Entity
 @Table(name = "envios")
 public class Envio extends BaseEntity {

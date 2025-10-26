@@ -7,6 +7,21 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * ListaDeseosRepositoryImpl
+ *
+ * Implementación en memoria (sin base de datos real) de la interfaz
+ * ListaDeseosRepository. Esto es útil para pruebas locales o ambientes
+ * donde todavía no tenemos la parte JPA lista.
+ *
+ * Internamente usamos:
+ * - ConcurrentHashMap<Long, ListaDeseos> para guardar los registros.
+ * - AtomicLong seq para ir generando IDs simulando una PK autoincremental.
+ *
+ * También implementamos reglas básicas como:
+ * - evitar duplicados en la wishlist del mismo usuario
+ * - listar los deseos por usuario
+ */
 public class ListaDeseosRepositoryImpl implements ListaDeseosRepository {
 
     private final Map<Long, ListaDeseos> data = new ConcurrentHashMap<>();
@@ -24,6 +39,7 @@ public class ListaDeseosRepositoryImpl implements ListaDeseosRepository {
 
     @Override
     public ListaDeseos save(ListaDeseos entity) {
+        // Si no tiene id, le asignamos uno nuevo simulando autoincrement.
         if (entity.getId() == null) {
             entity.setId(seq.getAndIncrement());
         }
@@ -36,6 +52,11 @@ public class ListaDeseosRepositoryImpl implements ListaDeseosRepository {
         data.remove(id);
     }
 
+    /**
+     * existsByUsuarioIdAndProductoId:
+     * Revisa si ya existe un registro con ese usuario y ese producto.
+     * Esto sirve para no meter el mismo producto dos veces en la misma wishlist.
+     */
     @Override
     public boolean existsByUsuarioIdAndProductoId(Long usuarioId, Long productoId) {
         if (usuarioId == null || productoId == null) return false;
@@ -47,6 +68,10 @@ public class ListaDeseosRepositoryImpl implements ListaDeseosRepository {
         );
     }
 
+    /**
+     * findByUsuarioId:
+     * Devuelve toda la lista de deseos de un usuario específico.
+     */
     @Override
     public List<ListaDeseos> findByUsuarioId(Long usuarioId) {
         if (usuarioId == null) return List.of();

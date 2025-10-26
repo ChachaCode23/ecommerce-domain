@@ -4,6 +4,30 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
+/**
+ * Producto
+ *
+ * Esta es la entidad que representa un producto del catálogo.
+ * Está mapeada a la tabla core.producto en la base de datos.
+ *
+ * Campos principales:
+ *  - id: PK autogenerada.
+ *  - nombre: nombre comercial del producto (obligatorio).
+ *  - descripcion: texto descriptivo (opcional).
+ *  - precio: precio actual del producto (no puede ser negativo).
+ *  - stock: cantidad disponible en inventario (no puede ser negativo).
+ *  - sku: código interno único del producto.
+ *
+ * Validaciones:
+ *  - @NotBlank en nombre → el producto no puede tener nombre vacío.
+ *  - @NotNull / @DecimalMin en precio → el precio no puede ser null ni < 0.00.
+ *  - @Min(0) en stock → no aceptamos stock negativo.
+ *
+ * SKU:
+ *  - sku está marcado como NOT NULL y unique en la BD.
+ *  - Antes de guardar (@PrePersist) si no tiene sku, se le genera uno automático.
+ *    Así evitamos violar la restricción NOT NULL de la columna.
+ */
 @Entity
 @Table(name = "producto", schema = "core")
 public class Producto {
@@ -32,8 +56,15 @@ public class Producto {
     @Column(name = "sku", nullable = false, unique = true, length = 64)
     private String sku;
 
-    // ===================== LIFECYCLE HOOK =====================
-    // Antes de insertar, garantizamos SKU != null
+
+    /**
+     * @PrePersist:
+     * Este método se ejecuta automáticamente ANTES de insertar el registro en DB.
+     * Si el sku no fue seteado manualmente, aquí genero uno.
+     *
+     * Esto sirve como "última defensa" para que la fila no falle al insert
+     * por tener sku NULL.
+     */
     @PrePersist
     public void prePersist() {
         if (sku == null || sku.isBlank()) {
@@ -41,9 +72,17 @@ public class Producto {
         }
     }
 
-    // ===================== HELPERS =====================
+
+    /**
+     * generarSkuInterno:
+     * Genera un SKU a partir del nombre + timestamp.
+     * - Limpia caracteres raros del nombre.
+     * - Usa máximo 6 chars del nombre en mayúscula.
+     * - Le pega un timestamp convertido a base36 para hacerlo corto y casi único.
+     *
+     * Ejemplo de SKU: "GORRA-LO6Z1F7"
+     */
     private String generarSkuInterno() {
-        // Usa el nombre como base, limpia caracteres raros, corta a 6 chars
         String base = (nombre != null ? nombre : "PROD")
                 .replaceAll("[^A-Za-z0-9]", "")
                 .toUpperCase();
@@ -52,7 +91,6 @@ public class Producto {
             base = base.substring(0, 6);
         }
 
-        // timestamp en base36 para hacerlo corto pero único-ish
         String ts36 = Long.toString(System.currentTimeMillis(), 36).toUpperCase();
 
         return base + "-" + ts36;
@@ -62,7 +100,6 @@ public class Producto {
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
@@ -70,7 +107,6 @@ public class Producto {
     public String getNombre() {
         return nombre;
     }
-
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }
@@ -78,7 +114,6 @@ public class Producto {
     public String getDescripcion() {
         return descripcion;
     }
-
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }
@@ -86,7 +121,6 @@ public class Producto {
     public BigDecimal getPrecio() {
         return precio;
     }
-
     public void setPrecio(BigDecimal precio) {
         this.precio = precio;
     }
@@ -94,7 +128,6 @@ public class Producto {
     public int getStock() {
         return stock;
     }
-
     public void setStock(int stock) {
         this.stock = stock;
     }
@@ -102,7 +135,6 @@ public class Producto {
     public String getSku() {
         return sku;
     }
-
     public void setSku(String sku) {
         this.sku = sku;
     }

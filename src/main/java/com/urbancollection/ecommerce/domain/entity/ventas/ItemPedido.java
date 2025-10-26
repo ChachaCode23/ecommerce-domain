@@ -10,8 +10,24 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 /**
- * Mapea a core.ItemPedido
- * PK = item_pedido_id
+ * ItemPedido
+ *
+ * Representa UNA línea dentro de un pedido.
+ *
+ * Esta entidad se guarda en la tabla core.ItemPedido.
+ * La PK real es item_pedido_id (por eso usamos @AttributeOverride).
+ *
+ * Campos:
+ * - producto: qué producto se está comprando.
+ * - cantidad: cuántas unidades de ese producto.
+ * - precioUnitario: el precio que tenía ese producto en el momento de la compra.
+ *   (esto es importante para historial, por si el precio luego cambia).
+ * - pedido: referencia al Pedido al que pertenece este item.
+ *
+ * Validaciones:
+ * - cantidad debe ser >= 1.
+ * - precioUnitario no puede ser null ni negativo.
+ * - producto y pedido son obligatorios.
  */
 @Entity
 @Table(name = "ItemPedido", schema = "core")
@@ -35,8 +51,7 @@ public class ItemPedido extends BaseEntity {
     @JoinColumn(name = "pedido_id", nullable = false)
     private Pedido pedido;
 
-    // ===== getters / setters =====
-
+    // ===== Getters / Setters =====
     public Producto getProducto() {
         return producto;
     }

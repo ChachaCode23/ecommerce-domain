@@ -12,6 +12,20 @@ import com.urbancollection.ecommerce.shared.BaseService;
 import com.urbancollection.ecommerce.shared.logging.LoggerPort;
 import com.urbancollection.ecommerce.shared.tasks.TaskListPort;
 
+/**
+ * ProductoService
+ *
+ * Servicio que maneja la lógica de negocio de productos.
+ * Aquí controlo:
+ *  - crear productos nuevos
+ *  - actualizar stock
+ *  - eliminar productos
+ *  - listar / buscar productos
+ *
+ * También registro eventos útiles:
+ *  - logs (para auditoría)
+ *  - tareas en background cuando hay stock bajo
+ */
 public class ProductoService extends BaseService {
 
     private final ProductoRepository productoRepository;
@@ -30,10 +44,18 @@ public class ProductoService extends BaseService {
 
     // ================== QUERIES ==================
 
+    /**
+     * listarProductos:
+     * Devuelve todos los productos de la base.
+     */
     public List<Producto> listarProductos() {
         return productoRepository.findAll();
     }
 
+    /**
+     * obtenerProductoPorId:
+     * Busca un producto por id. Si el id es inválido o no existe, retorna null.
+     */
     public Producto obtenerProductoPorId(Long id) {
         if (id == null || id <= 0) {
             return null;
@@ -44,7 +66,20 @@ public class ProductoService extends BaseService {
     // ================== COMMANDS ==================
 
     /**
-     * Crea un producto nuevo
+     * crearProducto:
+     * Crea un producto nuevo con nombre, descripción, precio y stock inicial.
+     *
+     * Validaciones básicas:
+     *  - nombre no puede venir vacío
+     *  - precio no puede ser negativo
+     *  - stock inicial no puede ser negativo
+     *
+     * También genero un SKU automáticamente porque en la BD ese campo es NOT NULL.
+     *
+     * Después de guardar:
+     *  - hago logger.info con los datos creados
+     *  - si el stock quedó bajo (<5) encolo una tarea en taskList
+     *    para que alguien revise inventario.
      */
     @Transactional
     public Producto crearProducto(String nombre,
@@ -71,7 +106,8 @@ public class ProductoService extends BaseService {
         p.setPrecio(precio);
         p.setStock(stockInicial);
 
-        // IMPORTANTE: en tu DB la columna sku es NOT NULL
+        // Genero un SKU simple basado en el nombre + timestamp.
+        // Importante porque la columna sku es NOT NULL en DB.
         String generatedSku = (nombre.trim() + "-" + System.currentTimeMillis()).toUpperCase();
         p.setSku(generatedSku);
 
@@ -79,6 +115,7 @@ public class ProductoService extends BaseService {
 
         logger.info("Producto creado id={} sku={}", saved.getId(), saved.getSku());
 
+        // Si el stock ya nace bajito, creo una tarea de alerta.
         if (saved.getStock() < 5) {
             taskList.enqueue(
                 "REVISAR_STOCK",
@@ -90,7 +127,17 @@ public class ProductoService extends BaseService {
     }
 
     /**
-     * Actualiza el stock (setea a nuevoStock)
+     * actualizarStock:
+     * Setea el stock de un producto a un nuevo valor.
+     *
+     * Reglas:
+     *  - productoId debe ser válido
+     *  - el producto debe existir
+     *  - nuevoStock no puede ser negativo
+     *
+     * Luego de actualizar:
+     *  - log de auditoría
+     *  - si el stock quedó crítico (<5) encolo una tarea de revisión
      */
     @Transactional
     public Producto actualizarStock(Long productoId, Integer nuevoStock) {
@@ -125,7 +172,15 @@ public class ProductoService extends BaseService {
     }
 
     /**
-     * Borra un producto por ID
+     * eliminarProducto:
+     * Elimina un producto por ID.
+     *
+     * Reglas:
+     *  - si el ID es inválido → false
+     *  - si el producto no existe → false
+     *  - si existe → se borra y devuelvo true
+     *
+     * También registro en logs y mando una tarea de auditoría.
      */
     @Transactional
     public boolean eliminarProducto(Long productoId) {
@@ -140,7 +195,6 @@ public class ProductoService extends BaseService {
             return false;
         }
 
-        // tu ProductoRepository debe tener algo tipo delete(Long id)
         productoRepository.delete(productoId);
 
         logger.info("Producto eliminado id={}", productoId);
@@ -153,17 +207,24 @@ public class ProductoService extends BaseService {
         return true;
     }
 
-    // ===== helpers que usa el controller para empaquetar respuesta =====
+    // ===== Helpers para el controller =====
 
+    /**
+     * toResult:
+     * Convierte un Producto (o null) a un OperationResult genérico
+     * que el controller puede devolver.
+     */
     public OperationResult toResult(Producto p) {
         if (p == null) {
             return OperationResult.failure("Operación inválida o producto no encontrado");
         }
-        // IMPORTANTE: OperationResult.success(...) en tu proyecto
-        // solo acepta mensaje (no acepta data extra).
         return OperationResult.success("ok");
     }
 
+    /**
+     * toDeleteResult:
+     * Convierte el boolean de eliminarProducto(...) a OperationResult.
+     */
     public OperationResult toDeleteResult(boolean ok) {
         if (!ok) {
             return OperationResult.failure("No se pudo eliminar el producto");

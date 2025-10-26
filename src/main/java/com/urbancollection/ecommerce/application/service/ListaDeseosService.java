@@ -11,6 +11,19 @@ import com.urbancollection.ecommerce.shared.BaseService;
 
 import java.util.List;
 
+/**
+ * ListaDeseosService
+ *
+ * Servicio de la lógica de negocio para la lista de deseos (wishlist).
+ *
+ * Aquí controlo:
+ *  - agregar un producto a la wishlist de un usuario
+ *  - quitarlo
+ *  - listar lo que ese usuario tiene guardado
+ *
+ * Uso OperationResult para devolver si la operación fue exitosa o no,
+ * junto con un mensaje entendible.
+ */
 public class ListaDeseosService extends BaseService implements IListaDeseosService {
 
     private final ListaDeseosRepository listaRepo;
@@ -25,6 +38,15 @@ public class ListaDeseosService extends BaseService implements IListaDeseosServi
         this.productoRepo = productoRepo;
     }
 
+    /**
+     * agregar:
+     * Agrega un producto a la lista de deseos del usuario.
+     * Pasos:
+     * 1. Valido que el usuario exista.
+     * 2. Valido que el producto exista.
+     * 3. Verifico que ese producto no esté ya en la wishlist del usuario.
+     * 4. Creo el registro ListaDeseos y lo guardo.
+     */
     @Override
     public OperationResult agregar(Long usuarioId, Long productoId) {
         try {
@@ -32,7 +54,7 @@ public class ListaDeseosService extends BaseService implements IListaDeseosServi
             Usuario u = usuarioRepo.findById(usuarioId);
             if (u == null) return OperationResult.failure("Usuario no encontrado");
 
-            // validar producto (existencia; si manejas 'activo', valida aquí p.isActivo())
+            // validar producto
             Producto p = productoRepo.findById(productoId);
             if (p == null) return OperationResult.failure("Producto no encontrado");
 
@@ -41,7 +63,7 @@ public class ListaDeseosService extends BaseService implements IListaDeseosServi
                 return OperationResult.failure("Ya esta en tu lista de deseos");
             }
 
-            // crear registro
+            // crear relación usuario-producto en la wishlist
             ListaDeseos ld = new ListaDeseos();
             ld.setUsuario(u);
             ld.setProducto(p);
@@ -55,12 +77,19 @@ public class ListaDeseosService extends BaseService implements IListaDeseosServi
         }
     }
 
+    /**
+     * quitar:
+     * Elimina un ítem de la wishlist por su id.
+     * Si no existe, devuelvo error de negocio.
+     */
     @Override
     public OperationResult quitar(Long listaDeseosId) {
         try {
             ListaDeseos ld = listaRepo.findById(listaDeseosId);
             if (ld == null) return OperationResult.failure("Elemento no encontrado");
+
             listaRepo.delete(listaDeseosId);
+
             logger.info("Wishlist eliminado id={}", listaDeseosId);
             return OperationResult.success("Eliminado de tu lista de deseos");
         } catch (Exception e) {
@@ -69,6 +98,11 @@ public class ListaDeseosService extends BaseService implements IListaDeseosServi
         }
     }
 
+    /**
+     * listarDeUsuario:
+     * Devuelve todos los productos en la lista de deseos de un usuario.
+     * Si algo falla, devuelvo lista vacía y registro el error en el log.
+     */
     @Override
     public List<ListaDeseos> listarDeUsuario(Long usuarioId) {
         try {

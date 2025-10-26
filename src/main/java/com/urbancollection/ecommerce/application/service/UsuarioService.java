@@ -9,6 +9,20 @@ import com.urbancollection.ecommerce.shared.ValidationUtil;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * UsuarioService
+ *
+ * Servicio de la lógica de negocio para usuarios.
+ * Aquí manejo:
+ *  - crear usuario
+ *  - actualizar usuario
+ *  - eliminar usuario
+ *  - listar / buscar usuarios
+ *
+ * También validaciones de negocio como:
+ *  - correo único
+ *  - normalizar datos antes de guardar
+ */
 public class UsuarioService extends BaseService implements IUsuarioService {
 
     private final UsuarioRepository usuarioRepository;
@@ -17,6 +31,11 @@ public class UsuarioService extends BaseService implements IUsuarioService {
         this.usuarioRepository = usuarioRepository;
     }
 
+    /**
+     * listar:
+     * Devuelve todos los usuarios.
+     * Si algo falla, devuelvo lista vacía y lo dejo logueado.
+     */
     @Override
     public List<Usuario> listar() {
         try {
@@ -27,6 +46,11 @@ public class UsuarioService extends BaseService implements IUsuarioService {
         }
     }
 
+    /**
+     * buscarPorId:
+     * Busca un usuario por id.
+     * Uso Optional porque puede que no exista.
+     */
     @Override
     public Optional<Usuario> buscarPorId(Long id) {
         try {
@@ -37,6 +61,20 @@ public class UsuarioService extends BaseService implements IUsuarioService {
         }
     }
 
+    /**
+     * crear:
+     * Crea un usuario nuevo.
+     *
+     * Reglas:
+     * - El body no puede ser null.
+     * - Corro Bean Validation (anotaciones en la entidad Usuario).
+     * - El correo no puede estar repetido (ignora mayúsculas/minúsculas).
+     *
+     * Si todo está bien:
+     * - guardo el usuario
+     * - hago log
+     * - devuelvo OperationResult.success con mensaje
+     */
     @Override
     public OperationResult crear(Usuario nuevo) {
         try {
@@ -44,12 +82,11 @@ public class UsuarioService extends BaseService implements IUsuarioService {
 
             normalizar(nuevo);
 
-            // Bean Validation (anotaciones en la entidad)
+            // Validaciones por anotaciones (@NotBlank, etc.)
             OperationResult v = ValidationUtil.validate(nuevo);
             if (!v.isSuccess()) return v;
 
-           // ===== Reglas de negocio =====
-            // Email único (case-insensitive)
+            // Regla de negocio: correo único
             if (nuevo.getCorreo() != null &&
                 usuarioRepository.existsByCorreoIgnoreCase(nuevo.getCorreo())) {
                 return OperationResult.failure("Ya existe un usuario con ese correo");
@@ -64,6 +101,17 @@ public class UsuarioService extends BaseService implements IUsuarioService {
         }
     }
 
+    /**
+     * actualizar:
+     * Edita un usuario existente.
+     *
+     * Flujo:
+     * - Busco el usuario por id. Si no existe → error.
+     * - Normalizo y valido los datos nuevos.
+     * - Si cambia el correo, vuelvo a chequear que no esté usado por otro usuario.
+     * - Aplico los cambios campo por campo.
+     * - Guardo y retorno éxito.
+     */
     @Override
     public OperationResult actualizar(Long id, Usuario cambios) {
         try {
@@ -74,28 +122,27 @@ public class UsuarioService extends BaseService implements IUsuarioService {
 
             normalizar(cambios);
 
-            // Bean Validation
+            // Validación Bean Validation en el objeto cambios
             OperationResult v = ValidationUtil.validate(cambios);
             if (!v.isSuccess()) return v;
 
-            // ===== Reglas de negocio =====
-            // Si el correo cambia, validar único (case-insensitive)
+            // Regla de negocio: si se cambia el correo, debe seguir siendo único
             String correoNuevo = cambios.getCorreo();
             if (correoNuevo != null && !correoNuevo.equalsIgnoreCase(existente.getCorreo())) {
-                // preferible buscar el usuario con ese correo y chequear id distinto
                 Usuario conMismoCorreo = usuarioRepository.findByCorreoIgnoreCase(correoNuevo);
                 if (conMismoCorreo != null && !conMismoCorreo.getId().equals(existente.getId())) {
                     return OperationResult.failure("Ya existe otro usuario con ese correo");
                 }
             }
 
-            // Aplicar cambios simples (ajusta según tus campos)
+            // Aplico solo los campos que vienen en "cambios"
             if (cambios.getNombre() != null) existente.setNombre(cambios.getNombre());
             if (cambios.getCorreo() != null) existente.setCorreo(cambios.getCorreo());
             if (cambios.getContrasena() != null) existente.setContrasena(cambios.getContrasena());
             if (cambios.getRol() != null) existente.setRol(cambios.getRol());
 
             usuarioRepository.save(existente);
+
             logger.info("Usuario actualizado id={} correo={}", existente.getId(), existente.getCorreo());
             return OperationResult.success("Usuario actualizado correctamente");
         } catch (Exception e) {
@@ -104,6 +151,11 @@ public class UsuarioService extends BaseService implements IUsuarioService {
         }
     }
 
+    /**
+     * eliminar:
+     * Borra un usuario por id.
+     * Si no existe, devuelvo error de negocio.
+     */
     @Override
     public OperationResult eliminar(Long id) {
         try {
@@ -119,11 +171,15 @@ public class UsuarioService extends BaseService implements IUsuarioService {
         }
     }
 
-    // -------- Helpers --------
+    /**
+     * normalizar:
+     * Limpia espacios y deja los strings en una forma consistente
+     * antes de validar o guardar.
+     */
     private void normalizar(Usuario u) {
         if (u.getNombre() != null) u.setNombre(u.getNombre().trim());
         if (u.getCorreo() != null) u.setCorreo(u.getCorreo().trim());
         if (u.getRol() != null) u.setRol(u.getRol().trim());
-        // (No forzamos lower-case para guardar; la comparación ya es ignore-case)
+        // No forzamos lower-case aquí porque hacemos comparación ignore-case.
     }
 }
