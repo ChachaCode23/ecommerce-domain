@@ -81,7 +81,7 @@ public final class InMemoryContext {
 
     // ====== Singleton ======
     private static final InMemoryContext INSTANCE = new InMemoryContext();
-    private InMemoryContext() {}
+    public InMemoryContext() {}
     public static InMemoryContext getInstance() { return INSTANCE; }
 
     // ====== Getters como LISTA (copias para lectura) ======
@@ -112,5 +112,27 @@ public final class InMemoryContext {
 
     public void deleteProductoById(Long id) {
         productos.remove(id);
+    }
+    
+ // Uso de pruebas: limpia el estado in-memory entre tests.
+ // package-private (sin public) para no exponerlo fuera del módulo.
+ @SuppressWarnings({ "rawtypes" })
+ void resetForTests() {
+     try {
+         for (java.lang.reflect.Field f : this.getClass().getDeclaredFields()) {
+             if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
+             f.setAccessible(true);
+             Object value = f.get(this);
+
+             if (value instanceof java.util.Map<?, ?>) {
+                 ((java.util.Map) value).clear();
+             } else if (value instanceof java.util.Collection<?>) {
+                 ((java.util.Collection) value).clear();
+             }
+         }
+     } catch (IllegalAccessException ignored) {
+         // Solo para tests.
+     }
+ 
     }
 }

@@ -1,35 +1,50 @@
 package com.urbancollection.ecommerce.persistence.repositories;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.urbancollection.ecommerce.domain.entity.logistica.Direccion;
 import com.urbancollection.ecommerce.domain.repository.DireccionRepository;
 
-/**
- * Implementación dummy/legacy. Ya no se usa en runtime porque
- * la implementación real es DireccionRepositoryJpaAdapter (en infraestructura).
- * La dejamos solo para que el proyecto compile.
- */
 public class DireccionRepositoryImpl implements DireccionRepository {
+
+    private static final Map<Long, Direccion> STORE = new ConcurrentHashMap<>();
+    private static final AtomicLong SEQ = new AtomicLong(0);
+
+    @Override
+    public Direccion save(Direccion d) {
+        if (d == null) return null;
+        if (d.getId() == null) d.setId(SEQ.incrementAndGet());
+        STORE.put(d.getId(), d);
+        return d;
+    }
 
     @Override
     public Direccion findById(Long id) {
-        throw new UnsupportedOperationException("DireccionRepositoryImpl ya no se usa");
+        return STORE.get(id);
     }
 
     @Override
     public List<Direccion> findAll() {
-        return Collections.emptyList();
+        return new ArrayList<>(STORE.values());
     }
 
-    @Override
-    public Direccion save(Direccion direccion) {
-        throw new UnsupportedOperationException("DireccionRepositoryImpl ya no se usa");
+    
+    public void delete(Long id) {
+        STORE.remove(id);
     }
 
-    @Override
+    
     public void deleteById(Long id) {
-        throw new UnsupportedOperationException("DireccionRepositoryImpl ya no se usa");
+        STORE.remove(id);
+    }
+
+    
+    public static void resetForTests() {
+        STORE.clear();
+        SEQ.set(0);
     }
 }
