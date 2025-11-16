@@ -37,7 +37,7 @@ public class TransaccionPagoService implements ITransaccionPagoService {
         if (existente == null) return OperationResult.failure("No existe");
         if (cambios == null) return OperationResult.failure("Cambios inválidos");
 
-        // merge simple: persiste 'cambios' con el id asegurado
+        //persiste 'cambios' con el id asegurado
         cambios.setId(id);
         repository.save(cambios);
         return OperationResult.success("Actualizado");
@@ -47,7 +47,7 @@ public class TransaccionPagoService implements ITransaccionPagoService {
     public OperationResult eliminar(Long id) {
         var existente = repository.findById(id);
         if (existente == null) return OperationResult.failure("No existe");
-        // si tu repo usa deleteById(Long), cámbialo aquí
+       
         repository.delete(id);
         return OperationResult.success("Eliminado");
     }

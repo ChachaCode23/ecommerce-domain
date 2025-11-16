@@ -13,22 +13,15 @@ import java.util.Optional;
  * Interfaz del servicio de productos. Define qué operaciones puede hacer
  * el caso de uso de catálogo sin hablar directo con controladores ni repositorios.
  *
- * Métodos:
- *
- * listar():
+
  *   Devuelve todos los productos como DTO (lo que se expone hacia afuera).
  *
- * buscarPorId(id):
  *   Busca un producto específico. Uso Optional porque puede no existir.
  *
- * crear(p):
  *   Crea un producto nuevo. Devuelve OperationResult para saber si fue válido
  *   (por ejemplo, nombre duplicado, precio inválido, etc.).
  *
- * actualizar(id, cambios):
  *   Edita un producto existente aplicando los cambios permitidos.
- *
- * eliminar(id):
  *   Borra un producto por su id.
  */
 public interface IProductoService {

@@ -38,11 +38,21 @@ import java.util.List;
  *   Consultas para devolver pedidos ya creados.
  */
 public interface IPedidoService {
-    OperationResult crearPedido(Long usuarioId, Long direccionId, List<ItemPedido> items, Long cuponId);
-    OperationResult confirmarPago(Long pedidoId, MetodoDePago metodo, BigDecimal monto);
+
+    OperationResult crearPedido(Long usuarioId,
+                                Long direccionId,
+                                List<ItemPedido> items,
+                                Long cuponId);
+
+    OperationResult confirmarPago(Long pedidoId,
+                                  MetodoDePago metodo,
+                                  BigDecimal monto);
+
     OperationResult despacharPedido(Long pedidoId, String tracking);
+
     OperationResult marcarEntregado(Long pedidoId);
 
     Pedido obtenerPorId(Long id);
+
     List<Pedido> listarTodos();
 }

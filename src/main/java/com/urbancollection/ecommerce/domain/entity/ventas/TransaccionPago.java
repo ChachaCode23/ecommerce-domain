@@ -7,6 +7,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 /**
@@ -61,4 +62,12 @@ public class TransaccionPago extends BaseEntity {
 
     public OffsetDateTime getCreadoEn() { return creadoEn; }
     public void setCreadoEn(OffsetDateTime creadoEn) { this.creadoEn = creadoEn; }
+	public void setMetodo(MetodoDePago metodo) {
+		// TODO Auto-generated method stub
+		
+	}
+	public void setFecha(LocalDateTime now) {
+		// TODO Auto-generated method stub
+		
+	}
 }

@@ -9,7 +9,7 @@ import jakarta.persistence.Table;
  * Direccion
  *
  * Entidad que representa una dirección física de envío.
- * Está mapeada a la tabla dbo.direcciones (nota: nombre en plural y schema dbo).
+ * Está mapeada a la tabla direcciones (sin schema para H2).
  *
  * Campos básicos:
  *  - calle
@@ -23,7 +23,7 @@ import jakarta.persistence.Table;
  * Hereda de BaseEntity.
  */
 @Entity
-@Table(name = "direcciones", schema = "dbo") // tabla "direcciones" en el schema dbo
+@Table(name = "direcciones", schema = "core")
 public class Direccion extends BaseEntity {
 
     @Column(name = "calle")

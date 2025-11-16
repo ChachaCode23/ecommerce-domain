@@ -6,10 +6,16 @@ import com.urbancollection.ecommerce.application.dto.ProductoDTO;
 public class ProductoMapper {
 
     public static ProductoDTO toDTO(Producto producto) {
+        if (producto == null) {
+            return null;
+        }
+        
         return new ProductoDTO(
-            producto.getId(),       // debe devolver Long
-            producto.getNombre(),   // String
-            producto.getPrecio()    // BigDecimal
+            producto.getId(),           // Long
+            producto.getNombre(),       // String
+            producto.getDescripcion(),  // String
+            producto.getPrecio(),       // BigDecimal
+            producto.getStock()         // Integer
         );
     }
 }

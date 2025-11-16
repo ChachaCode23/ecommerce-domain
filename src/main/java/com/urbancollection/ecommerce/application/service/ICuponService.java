@@ -13,3 +13,4 @@ public interface ICuponService {
     OperationResult actualizar(Long id, Cupon cambios);
     OperationResult eliminar(Long id);
 }
+

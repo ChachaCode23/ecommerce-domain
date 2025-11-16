@@ -44,7 +44,7 @@ public class ItemPedidoService implements IItemPedidoService {
             return OperationResult.failure("Cambios inválidos");
         }
 
-        // Merge simple: persistimos 'cambios' asegurando el id
+        //persistimos 'cambios' asegurando el id
         cambios.setId(id);
         repository.save(cambios);
 
@@ -57,7 +57,7 @@ public class ItemPedidoService implements IItemPedidoService {
         if (existente == null) {
             return OperationResult.failure("No existe");
         }
-        // Si tu repo expone deleteById(Long), cambia esta línea por deleteById(id)
+        
         repository.deleteById(id);
         return OperationResult.success("Eliminado");
     }

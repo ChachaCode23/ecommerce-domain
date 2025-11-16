@@ -33,8 +33,7 @@ public final class TestDataFactory {
         // si tu clase requiere usuario/producto obligatorios, setéalos aquí:
         // Usuario u = usuarioValido();
         // Producto p = productoValido();
-        // l.setUsuario(u);
-        // l.setProducto(p);
+       // l.setUsuario(u);
         return l;
     }
 
@@ -57,3 +56,4 @@ public final class TestDataFactory {
     }
 
 }
+

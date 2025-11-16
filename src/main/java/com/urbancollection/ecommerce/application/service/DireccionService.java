@@ -44,7 +44,7 @@ public class DireccionService implements IDireccionService {
             return OperationResult.failure("Cambios inválidos");
         }
 
-        // Merge simple: usamos el objeto 'cambios' y aseguramos el id
+        // usamos el objeto 'cambios' y aseguramos el id
         cambios.setId(id);
         direccionRepository.save(cambios);
 
@@ -57,7 +57,7 @@ public class DireccionService implements IDireccionService {
         if (existente == null) {
             return OperationResult.failure("No existe");
         }
-        // Si tu repo expone deleteById(Long), cámbialo aquí:
+        
         direccionRepository.deleteById(id);
         return OperationResult.success("Eliminada");
     }

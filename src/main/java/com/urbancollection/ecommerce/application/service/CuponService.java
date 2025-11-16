@@ -38,7 +38,6 @@ public class CuponService implements ICuponService {
         if (existente == null) return OperationResult.failure("No existe");
         if (cambios == null) return OperationResult.failure("Cambios inválidos");
 
-        // merge simple: persiste cambios con el id asegurado
         cambios.setId(id);
         repository.save(cambios);
         return OperationResult.success("Actualizado");
@@ -48,7 +47,7 @@ public class CuponService implements ICuponService {
     public OperationResult eliminar(Long id) {
         Cupon existente = repository.findById(id);
         if (existente == null) return OperationResult.failure("No existe");
-        // si tu repo expone deleteById(Long), cambia esta línea por deleteById(id)
+        
         repository.deleteById(id);
         return OperationResult.success("Eliminado");
     }
