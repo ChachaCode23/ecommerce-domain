@@ -1,27 +1,12 @@
 package com.urbancollection.ecommerce.application.service;
 
 import com.urbancollection.ecommerce.domain.base.OperationResult;
+import com.urbancollection.ecommerce.domain.entity.logistica.Direccion;
 import com.urbancollection.ecommerce.domain.entity.usuarios.Usuario;
 
 import java.util.List;
 import java.util.Optional;
 
-/**
- * IUsuarioService
- *
- * Interfaz del servicio de usuarios.
- * Aquí defino lo que se puede hacer con usuarios a nivel de negocio,
- * sin meter detalles de controllers ni de base de datos.
- *
- *   Devuelve la lista completa de usuarios.
- *   Busca un usuario específico. Devuelve Optional porque puede no existir.
- *
- *   Crea un usuario nuevo. Devuelve OperationResult para saber si fue válido
- *   (por ejemplo correo ya registrado).
- *
- *   Edita un usuario existente con los cambios que se permitan.
- *   Elimina un usuario por id.
- */
 public interface IUsuarioService {
 
     List<Usuario> listar();
@@ -29,6 +14,8 @@ public interface IUsuarioService {
     Optional<Usuario> buscarPorId(Long id);
 
     OperationResult crear(Usuario nuevo);
+    
+    OperationResult crearConDireccion(Usuario nuevo, Direccion direccion);
 
     OperationResult actualizar(Long id, Usuario cambios);
 

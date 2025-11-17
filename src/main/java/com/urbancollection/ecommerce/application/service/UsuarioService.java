@@ -1,7 +1,9 @@
 package com.urbancollection.ecommerce.application.service;
 
 import com.urbancollection.ecommerce.domain.base.OperationResult;
+import com.urbancollection.ecommerce.domain.entity.logistica.Direccion;
 import com.urbancollection.ecommerce.domain.entity.usuarios.Usuario;
+import com.urbancollection.ecommerce.domain.repository.DireccionRepository;
 import com.urbancollection.ecommerce.domain.repository.UsuarioRepository;
 import com.urbancollection.ecommerce.shared.BaseService;
 import com.urbancollection.ecommerce.shared.ValidationUtil;
@@ -9,33 +11,16 @@ import com.urbancollection.ecommerce.shared.ValidationUtil;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * UsuarioService
- *
- * Servicio de la lógica de negocio para usuarios.
- * Aquí manejo:
- *  - crear usuario
- *  - actualizar usuario
- *  - eliminar usuario
- *  - listar / buscar usuarios
- *
- * También validaciones de negocio como:
- *  - correo único
- *  - normalizar datos antes de guardar
- */
 public class UsuarioService extends BaseService implements IUsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final DireccionRepository direccionRepository;
 
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, DireccionRepository direccionRepository) {
         this.usuarioRepository = usuarioRepository;
+        this.direccionRepository = direccionRepository;
     }
 
-    /**
-     * listar:
-     * Devuelve todos los usuarios.
-     * Si algo falla, devuelvo lista vacía y lo dejo logueado.
-     */
     @Override
     public List<Usuario> listar() {
         try {
@@ -46,11 +31,6 @@ public class UsuarioService extends BaseService implements IUsuarioService {
         }
     }
 
-    /**
-     * buscarPorId:
-     * Busca un usuario por id.
-     * Uso Optional porque puede que no exista.
-     */
     @Override
     public Optional<Usuario> buscarPorId(Long id) {
         try {
@@ -61,20 +41,6 @@ public class UsuarioService extends BaseService implements IUsuarioService {
         }
     }
 
-    /**
-     * crear:
-     * Crea un usuario nuevo.
-     *
-     * Reglas:
-     * - El body no puede ser null.
-     * - Corro Bean Validation (anotaciones en la entidad Usuario).
-     * - El correo no puede estar repetido (ignora mayúsculas/minúsculas).
-     *
-     * Si todo está bien:
-     * - guardo el usuario
-     * - hago log
-     * - devuelvo OperationResult.success con mensaje
-     */
     @Override
     public OperationResult crear(Usuario nuevo) {
         try {
@@ -82,18 +48,20 @@ public class UsuarioService extends BaseService implements IUsuarioService {
 
             normalizar(nuevo);
 
-            // Validaciones por anotaciones (@NotBlank, etc.)
             OperationResult v = ValidationUtil.validate(nuevo);
             if (!v.isSuccess()) return v;
 
-            // Regla de negocio: correo único
-            if (nuevo.getCorreo() != null &&
-                usuarioRepository.existsByCorreoIgnoreCase(nuevo.getCorreo())) {
-                return OperationResult.failure("Ya existe un usuario con ese correo");
+            if (nuevo.getCorreo() != null) {
+                boolean existe = usuarioRepository.existsByCorreoIgnoreCase(nuevo.getCorreo());
+                System.out.println("DEBUG: Verificando correo '" + nuevo.getCorreo() + "' - Existe: " + existe);
+                
+                if (existe) {
+                    return OperationResult.failure("Ya existe un usuario con ese correo");
+                }
             }
 
             usuarioRepository.save(nuevo);
-            logger.info("Usuario creado id={} correo={}", nuevo.getId(), nuevo.getCorreo());
+            if (logger != null) logger.info("Usuario creado id={} correo={}", nuevo.getId(), nuevo.getCorreo());
             return OperationResult.success("Usuario creado correctamente");
         } catch (Exception e) {
             handleError(e, "Error al crear usuario");
@@ -101,17 +69,39 @@ public class UsuarioService extends BaseService implements IUsuarioService {
         }
     }
 
-    /**
-     * actualizar:
-     * Edita un usuario existente.
-     *
-     * Flujo:
-     * - Busco el usuario por id. Si no existe → error.
-     * - Normalizo y valido los datos nuevos.
-     * - Si cambia el correo, vuelvo a chequear que no esté usado por otro usuario.
-     * - Aplico los cambios campo por campo.
-     * - Guardo y retorno éxito.
-     */
+    @Override
+    public OperationResult crearConDireccion(Usuario nuevo, Direccion direccion) {
+        try {
+            if (nuevo == null) return OperationResult.failure("Usuario requerido");
+            if (direccion == null) return OperationResult.failure("Dirección requerida");
+
+            normalizar(nuevo);
+
+            OperationResult v = ValidationUtil.validate(nuevo);
+            if (!v.isSuccess()) return v;
+
+            if (nuevo.getCorreo() != null) {
+                boolean existe = usuarioRepository.existsByCorreoIgnoreCase(nuevo.getCorreo());
+                if (existe) {
+                    return OperationResult.failure("Ya existe un usuario con ese correo");
+                }
+            }
+
+            // Crear usuario primero
+            usuarioRepository.save(nuevo);
+
+            // Crear dirección asociada al usuario
+            direccion.setUsuarioId(nuevo.getId().intValue());
+            direccion.setEsPrincipal(true);
+            direccionRepository.save(direccion);
+
+            return OperationResult.success("Usuario y dirección creados correctamente");
+        } catch (Exception e) {
+            handleError(e, "Error al crear usuario con dirección");
+            return OperationResult.failure("No se pudo crear el usuario con dirección");
+        }
+    }
+
     @Override
     public OperationResult actualizar(Long id, Usuario cambios) {
         try {
@@ -122,11 +112,9 @@ public class UsuarioService extends BaseService implements IUsuarioService {
 
             normalizar(cambios);
 
-            // Validación Bean Validation en el objeto cambios
             OperationResult v = ValidationUtil.validate(cambios);
             if (!v.isSuccess()) return v;
 
-            // Regla de negocio: si se cambia el correo, debe seguir siendo único
             String correoNuevo = cambios.getCorreo();
             if (correoNuevo != null && !correoNuevo.equalsIgnoreCase(existente.getCorreo())) {
                 Usuario conMismoCorreo = usuarioRepository.findByCorreoIgnoreCase(correoNuevo);
@@ -135,7 +123,6 @@ public class UsuarioService extends BaseService implements IUsuarioService {
                 }
             }
 
-            // Aplico solo los campos que vienen en "cambios"
             if (cambios.getNombre() != null) existente.setNombre(cambios.getNombre());
             if (cambios.getCorreo() != null) existente.setCorreo(cambios.getCorreo());
             if (cambios.getContrasena() != null) existente.setContrasena(cambios.getContrasena());
@@ -143,7 +130,7 @@ public class UsuarioService extends BaseService implements IUsuarioService {
 
             usuarioRepository.save(existente);
 
-            logger.info("Usuario actualizado id={} correo={}", existente.getId(), existente.getCorreo());
+            if (logger != null) logger.info("Usuario actualizado id={} correo={}", existente.getId(), existente.getCorreo());
             return OperationResult.success("Usuario actualizado correctamente");
         } catch (Exception e) {
             handleError(e, "Error al actualizar usuario");
@@ -151,11 +138,6 @@ public class UsuarioService extends BaseService implements IUsuarioService {
         }
     }
 
-    /**
-     * eliminar:
-     * Borra un usuario por id.
-     * Si no existe, devuelvo error de negocio.
-     */
     @Override
     public OperationResult eliminar(Long id) {
         try {
@@ -163,7 +145,7 @@ public class UsuarioService extends BaseService implements IUsuarioService {
             if (existente == null) return OperationResult.failure("Usuario no encontrado");
 
             usuarioRepository.delete(id);
-            logger.info("Usuario eliminado id={}", id);
+            if (logger != null) logger.info("Usuario eliminado id={}", id);
             return OperationResult.success("Usuario eliminado correctamente");
         } catch (Exception e) {
             handleError(e, "Error al eliminar usuario");
@@ -171,15 +153,9 @@ public class UsuarioService extends BaseService implements IUsuarioService {
         }
     }
 
-    /**
-     * normalizar:
-     * Limpia espacios y deja los strings en una forma consistente
-     * antes de validar o guardar.
-     */
     private void normalizar(Usuario u) {
         if (u.getNombre() != null) u.setNombre(u.getNombre().trim());
         if (u.getCorreo() != null) u.setCorreo(u.getCorreo().trim());
         if (u.getRol() != null) u.setRol(u.getRol().trim());
-        // No forzamos lower-case aquí porque hacemos comparación ignore-case.
     }
 }

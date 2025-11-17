@@ -15,50 +15,48 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "pedido", schema = "core")
+@Table(name = "Pedido", schema = "core")
+@AttributeOverride(name = "id", column = @Column(name = "pedido_id"))
 public class Pedido extends BaseEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "pedido_id")
-    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "direccion_id")
+    @JoinColumn(name = "direccion_envio_id")
     private Direccion direccionEntrega;
 
+    @Column(name = "cupon_id")
+    private Integer cuponId;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado", length = 30)
+    @Column(name = "estado", length = 20, nullable = false)
     private EstadoDePedido estado;
 
-    @Column(name = "total")
-    private BigDecimal total;
+    @Column(name = "total", precision = 12, scale = 2, nullable = false)
+    private BigDecimal total = BigDecimal.ZERO;
 
     @OneToMany(
             mappedBy = "pedido",
             cascade = CascadeType.ALL,
             orphanRemoval = true,
-            fetch = FetchType.EAGER
+            fetch = FetchType.LAZY
     )
     private List<ItemPedido> items;
-
 
     @OneToOne(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private Envio envio;
 
     // ===== Getters / Setters =====
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
     public Usuario getUsuario() { return usuario; }
     public void setUsuario(Usuario usuario) { this.usuario = usuario; }
 
     public Direccion getDireccionEntrega() { return direccionEntrega; }
     public void setDireccionEntrega(Direccion direccionEntrega) { this.direccionEntrega = direccionEntrega; }
+
+    public Integer getCuponId() { return cuponId; }
+    public void setCuponId(Integer cuponId) { this.cuponId = cuponId; }
 
     public EstadoDePedido getEstado() { return estado; }
     public void setEstado(EstadoDePedido estado) { this.estado = estado; }
@@ -66,7 +64,10 @@ public class Pedido extends BaseEntity {
     public BigDecimal getTotal() { return total; }
     public void setTotal(BigDecimal total) { this.total = total; }
 
-    public List<ItemPedido> getItems() { return items; }
+    public List<ItemPedido> getItems() { 
+        if (items == null) items = new ArrayList<>();
+        return items; 
+    }
 
     public Envio getEnvio() { return envio; }
     public void setEnvio(Envio envio) { this.envio = envio; }
@@ -152,15 +153,11 @@ public class Pedido extends BaseEntity {
         if (tracking == null || tracking.isBlank())
             throw new IllegalArgumentException("El número de tracking es requerido.");
 
-        // Si ya existe un envío, actualiza; si no, crea uno nuevo
         if (this.envio == null) {
             this.envio = new Envio();
             this.envio.setPedido(this);
         }
         this.envio.setTracking(tracking);
-     // Si manejas estado del envío, opcional:
-     // this.envio.setEstado(EstadoDeEnvio.EN_PROCESO);  // importa el enum si lo usas
-
 
         this.estado = EstadoDePedido.ENVIADO;
     }

@@ -14,18 +14,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.urbancollection.ecommerce.domain.base.OperationResult;
 import com.urbancollection.ecommerce.domain.entity.usuarios.Usuario;
+import com.urbancollection.ecommerce.domain.repository.DireccionRepository;
 import com.urbancollection.ecommerce.domain.repository.UsuarioRepository;
 
 @ExtendWith(MockitoExtension.class)
 class UsuarioServiceTest {
 
     @Mock private UsuarioRepository usuarioRepository;
+    @Mock private DireccionRepository direccionRepository;
 
     private UsuarioService service;
 
     @BeforeEach
     void setUp() {
-        service = new UsuarioService(usuarioRepository);
+        service = new UsuarioService(usuarioRepository, direccionRepository);
     }
 
     // ---------- crear ----------
@@ -46,7 +48,7 @@ class UsuarioServiceTest {
 
         OperationResult result = service.crear(nuevo);
 
-        assertNotNull(result); // no forzamos success/failure, solo que retorna algo
+        assertNotNull(result);
         verify(usuarioRepository, times(1)).save(any(Usuario.class));
     }
 
@@ -81,7 +83,7 @@ class UsuarioServiceTest {
         when(usuarioRepository.findById(id)).thenReturn(existente);
 
         Usuario cambios = new Usuario();
-        cambios.setNombre("User A+"); // deliberadamente incompleto para forzar failure
+        cambios.setNombre("User A+");
 
         OperationResult result = service.actualizar(id, cambios);
 
@@ -104,7 +106,7 @@ class UsuarioServiceTest {
 
         var result = service.eliminar(id);
 
-        assertNotNull(result); // no asumimos success/failure
+        assertNotNull(result);
         verify(usuarioRepository, times(1)).delete(id);
     }
 

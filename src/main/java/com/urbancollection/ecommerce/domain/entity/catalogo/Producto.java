@@ -8,15 +8,16 @@ import java.math.BigDecimal;
  * Producto
  *
  * Esta es la entidad que representa un producto del catálogo.
- * Está mapeada a la tabla core.producto en la base de datos.
+ * Está mapeada a la tabla core.Producto en SQL Server.
  *
  * Campos principales:
- *  - id: PK autogenerada.
+ *  - producto_id: PK autogenerada.
  *  - nombre: nombre comercial del producto (obligatorio).
  *  - descripcion: texto descriptivo (opcional).
  *  - precio: precio actual del producto (no puede ser negativo).
  *  - stock: cantidad disponible en inventario (no puede ser negativo).
  *  - sku: código interno único del producto.
+ *  - activo: indica si el producto está activo en el catálogo.
  *
  * Validaciones:
  *  - @NotBlank en nombre → el producto no puede tener nombre vacío.
@@ -26,10 +27,9 @@ import java.math.BigDecimal;
  * SKU:
  *  - sku está marcado como NOT NULL y unique en la BD.
  *  - Antes de guardar (@PrePersist) si no tiene sku, se le genera uno automático.
- *    Así evitamos violar la restricción NOT NULL de la columna.
  */
 @Entity
-@Table(name = "producto", schema = "core")
+@Table(name = "Producto", schema = "core")
 public class Producto {
 
     @Id
@@ -38,49 +38,45 @@ public class Producto {
     private Long id;
 
     @NotBlank
-    @Column(name = "nombre", nullable = false, length = 255)
+    @Column(name = "nombre", nullable = false, length = 200)
     private String nombre;
 
-    @Column(name = "descripcion")
+    @Column(name = "descripcion", columnDefinition = "NVARCHAR(MAX)")
     private String descripcion;
 
     @NotNull
     @DecimalMin("0.00")
-    @Column(name = "precio", nullable = false, precision = 19, scale = 2)
+    @Column(name = "precio", nullable = false, precision = 12, scale = 2)
     private BigDecimal precio;
 
     @Min(0)
     @Column(name = "stock", nullable = false)
     private int stock;
 
-    @Column(name = "sku", nullable = false, unique = true, length = 64)
+    @Column(name = "sku", nullable = false, unique = true, length = 50)
     private String sku;
 
+    @Column(name = "activo", nullable = false)
+    private Boolean activo = true;
 
     /**
      * @PrePersist:
      * Este método se ejecuta automáticamente ANTES de insertar el registro en DB.
      * Si el sku no fue seteado manualmente, aquí genero uno.
-     *
-     * Esto sirve como "última defensa" para que la fila no falle al insert
-     * por tener sku NULL.
      */
     @PrePersist
     public void prePersist() {
         if (sku == null || sku.isBlank()) {
             this.sku = generarSkuInterno();
         }
+        if (activo == null) {
+            this.activo = true;
+        }
     }
-
 
     /**
      * generarSkuInterno:
      * Genera un SKU a partir del nombre + timestamp.
-     * - Limpia caracteres raros del nombre.
-     * - Usa máximo 6 chars del nombre en mayúscula.
-     * - Le pega un timestamp convertido a base36 para hacerlo corto y casi único.
-     *
-     * Ejemplo de SKU: "GORRA-LO6Z1F7"
      */
     private String generarSkuInterno() {
         String base = (nombre != null ? nombre : "PROD")
@@ -137,5 +133,12 @@ public class Producto {
     }
     public void setSku(String sku) {
         this.sku = sku;
+    }
+
+    public Boolean getActivo() {
+        return activo;
+    }
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
     }
 }

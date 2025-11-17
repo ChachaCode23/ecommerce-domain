@@ -14,14 +14,13 @@ import java.math.BigDecimal;
  *
  * Representa UNA línea dentro de un pedido.
  *
- * Esta entidad se guarda en la tabla core.ItemPedido.
- * La PK real es item_pedido_id (por eso usamos @AttributeOverride).
+ * Esta entidad se guarda en la tabla core.item_pedido en SQL Server.
+ * La PK real es item_pedido_id.
  *
  * Campos:
  * - producto: qué producto se está comprando.
  * - cantidad: cuántas unidades de ese producto.
  * - precioUnitario: el precio que tenía ese producto en el momento de la compra.
- *   (esto es importante para historial, por si el precio luego cambia).
  * - pedido: referencia al Pedido al que pertenece este item.
  *
  * Validaciones:
@@ -30,7 +29,7 @@ import java.math.BigDecimal;
  * - producto y pedido son obligatorios.
  */
 @Entity
-@Table(name = "ItemPedido", schema = "core")
+@Table(name = "item_pedido", schema = "core")
 @AttributeOverride(name = "id", column = @Column(name = "item_pedido_id"))
 public class ItemPedido extends BaseEntity {
 
