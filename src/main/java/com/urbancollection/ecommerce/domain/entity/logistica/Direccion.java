@@ -9,15 +9,6 @@ import jakarta.persistence.*;
  * Entidad que representa una dirección física de envío.
  * Está mapeada a la tabla core.Direccion en SQL Server.
  *
- * Campos básicos:
- *  - linea1, linea2
- *  - ciudad
- *  - provincia
- *  - codigo_postal
- *  - pais
- *  - nombre_contacto
- *  - es_principal
- *  - usuario_id
  *
  * Esta info se usa cuando el usuario hace un pedido y el sistema necesita saber
  * a dónde enviar el paquete.

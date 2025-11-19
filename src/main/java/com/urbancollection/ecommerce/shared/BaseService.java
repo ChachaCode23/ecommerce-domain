@@ -4,7 +4,7 @@ import com.urbancollection.ecommerce.shared.logging.LoggerPort;
 
 /**
  * BaseService
- * - NO depende de SLF4J (solo de la abstracción LoggerPort).
+ * - NO depende de SLF4J solo de la abstracción LoggerPort
  * - Las implementaciones concretas del logger se inyectan desde "infrastructure".
  */
 public abstract class BaseService {

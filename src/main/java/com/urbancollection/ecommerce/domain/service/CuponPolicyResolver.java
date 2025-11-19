@@ -8,7 +8,7 @@ import com.urbancollection.ecommerce.domain.enums.TipoDescuento;
 
 /**
  * Devuelve la policy adecuada según el cupón.
- * Nota: aquí NO validamos fechas/estado del cupón; solo elegimos la estrategia de cálculo.
+ *  aquí NO validamos fechas/estado del cupón; solo elegimos la estrategia de cálculo.
  */
 public final class CuponPolicyResolver {
 

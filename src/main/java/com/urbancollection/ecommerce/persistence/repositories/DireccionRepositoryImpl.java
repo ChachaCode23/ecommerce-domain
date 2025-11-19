@@ -32,17 +32,32 @@ public class DireccionRepositoryImpl implements DireccionRepository {
         return new ArrayList<>(STORE.values());
     }
 
-    
+    //  Buscar dirección principal por usuario
+    public Direccion findPrincipalByUsuarioId(Integer usuarioId) {
+        if (usuarioId == null) return null;
+        return STORE.values().stream()
+                .filter(d -> d.getUsuarioId() != null && d.getUsuarioId().equals(usuarioId))
+                .filter(d -> d.getEsPrincipal() != null && d.getEsPrincipal())
+                .findFirst()
+                .orElse(null);
+    }
+
+    //  Busca todas las direcciones de un usuario
+    public List<Direccion> findByUsuarioId(Integer usuarioId) {
+        if (usuarioId == null) return new ArrayList<>();
+        return STORE.values().stream()
+                .filter(d -> d.getUsuarioId() != null && d.getUsuarioId().equals(usuarioId))
+                .toList();
+    }
+
     public void delete(Long id) {
         STORE.remove(id);
     }
 
-    
     public void deleteById(Long id) {
         STORE.remove(id);
     }
 
-    
     public static void resetForTests() {
         STORE.clear();
         SEQ.set(0);

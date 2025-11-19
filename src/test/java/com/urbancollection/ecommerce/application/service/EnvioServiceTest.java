@@ -24,7 +24,7 @@ class EnvioServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new EnvioService(repo);
+        service = new EnvioService(repo, null);
     }
 
     @Test

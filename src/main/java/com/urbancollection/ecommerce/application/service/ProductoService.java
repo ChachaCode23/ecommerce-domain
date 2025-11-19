@@ -180,7 +180,7 @@ public class ProductoService implements IProductoService {
     }
 
     /**
-     * Elimina un producto por ID (método legacy).
+     * Elimina un producto por ID 
      */
     public boolean eliminarProducto(Long id) {
         if (id == null) return false;

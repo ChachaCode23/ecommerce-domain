@@ -35,10 +35,8 @@ public class PedidoService extends BaseService implements IPedidoService {
     private final DireccionRepository direccionRepository;
     private final ProductoRepository productoRepository;
     private final PedidoRepository pedidoRepository;
-    private final ItemPedidoRepository itemPedidoRepository;
     private final CuponRepository cuponRepository;
     private final TransaccionPagoRepository transaccionPagoRepository;
-    private final EnvioRepository envioRepository;
     private final StockService stockService;
 
     public PedidoService(UsuarioRepository usuarioRepository,
@@ -55,10 +53,8 @@ public class PedidoService extends BaseService implements IPedidoService {
         this.direccionRepository = direccionRepository;
         this.productoRepository = productoRepository;
         this.pedidoRepository = pedidoRepository;
-        this.itemPedidoRepository = itemPedidoRepository;
         this.cuponRepository = cuponRepository;
         this.transaccionPagoRepository = transaccionPagoRepository;
-        this.envioRepository = envioRepository;
         this.stockService = stockService;
     }
 
@@ -105,6 +101,13 @@ public class PedidoService extends BaseService implements IPedidoService {
                 pedido.agregarItem(item);
             }
 
+            // Valida que hay stock suficiente ANTES de crear el pedido
+            try {
+                stockService.validarDisponibilidad(pedido.getItems());
+            } catch (IllegalStateException e) {
+                return OperationResult.failure(e.getMessage());
+            }
+
             BigDecimal descuento = BigDecimal.ZERO;
 
             if (cuponId != null) {
@@ -135,6 +138,9 @@ public class PedidoService extends BaseService implements IPedidoService {
                         descuento.compareTo(cupon.getTopeDescuento()) > 0) {
                     descuento = cupon.getTopeDescuento();
                 }
+                
+                // Guardar el ID del cupón
+                pedido.setCuponId(cupon.getId().intValue());
             }
 
             pedido.calcularTotales(descuento, BigDecimal.ZERO);
@@ -157,22 +163,22 @@ public class PedidoService extends BaseService implements IPedidoService {
     @Transactional
     public OperationResult confirmarPago(Long pedidoId, MetodoDePago metodo, BigDecimal monto) {
         try {
-            // 1) Cargar pedido
+            // Cargar pedido
             Pedido pedido = pedidoRepository.findById(pedidoId);
             if (pedido == null) {
                 return OperationResult.failure("Pedido no encontrado");
             }
 
-            // 2) Validar stock
+            //  Validar stock 
             stockService.validarDisponibilidad(pedido.getItems());
 
-            // 3) Cambiar estado a PAGADO (dominio valida monto/estado)
+            //  Cambiar estado a PAGADO (dominio valida monto/estado)
             pedido.pagar(monto, metodo);
 
-            // 4) Descontar stock
+            //   Descontar stock SOLO al confirmar pago
             stockService.descontar(pedido.getItems());
 
-            // 5) Registrar transacción
+            // Registrar transacción
             TransaccionPago t = new TransaccionPago();
             t.setPedido(pedido);
             t.setMonto(monto);
@@ -181,7 +187,7 @@ public class PedidoService extends BaseService implements IPedidoService {
 
             transaccionPagoRepository.save(t);
 
-            // 6) Guardar pedido
+            //  Guardar pedido
             pedidoRepository.save(pedido);
 
             return OperationResult.success("Pago confirmado correctamente");
@@ -190,6 +196,42 @@ public class PedidoService extends BaseService implements IPedidoService {
             return OperationResult.failure(ex.getMessage());
         } catch (Exception ex) {
             return OperationResult.failure("Error inesperado al confirmar el pago");
+        }
+    }
+
+    // =====================  MARCAR COMO PAGADO =====================
+
+    @Override
+    @Transactional
+    public OperationResult marcarComoPagado(Long pedidoId) {
+        try {
+            Pedido pedido = pedidoRepository.findById(pedidoId);
+            if (pedido == null) {
+                return OperationResult.failure("Pedido no encontrado");
+            }
+
+            if (pedido.getEstado() != EstadoDePedido.PENDIENTE_PAGO) {
+                return OperationResult.failure("Solo se pueden marcar como pagado pedidos en estado PENDIENTE_PAGO");
+            }
+
+            //  Valida stock antes de marcar como pagado
+            try {
+                stockService.validarDisponibilidad(pedido.getItems());
+            } catch (IllegalStateException e) {
+                return OperationResult.failure(e.getMessage());
+            }
+
+            //  Descuenta stock al marcar como pagado
+            stockService.descontar(pedido.getItems());
+
+            // Cambia estado
+            pedido.setEstado(EstadoDePedido.PAGADO);
+            pedidoRepository.save(pedido);
+
+            return OperationResult.success("Pedido marcado como PAGADO y stock descontado");
+
+        } catch (Exception ex) {
+            return OperationResult.failure("Error al marcar el pedido como pagado");
         }
     }
 
@@ -202,7 +244,6 @@ public class PedidoService extends BaseService implements IPedidoService {
 
     @Override
     public Pedido obtenerPorId(Long id) {
-        // Si no existe, devuelve null; el controller se encarga del 404 JSON
         return pedidoRepository.findById(id);
     }
 
@@ -212,16 +253,15 @@ public class PedidoService extends BaseService implements IPedidoService {
     @Transactional
     public OperationResult despacharPedido(Long pedidoId, String tracking) {
         try {
-            // 1) Cargar pedido
             Pedido pedido = pedidoRepository.findById(pedidoId);
             if (pedido == null) {
                 return OperationResult.failure("Pedido no encontrado");
             }
 
-            // 2) Llamar la lógica de dominio
+            // Llamar la lógica de dominio
             pedido.despachar(tracking);
 
-            // 3) Guardar
+            // Guardar
             pedidoRepository.save(pedido);
 
             return OperationResult.success("Pedido despachado correctamente");
@@ -237,16 +277,15 @@ public class PedidoService extends BaseService implements IPedidoService {
     @Transactional
     public OperationResult marcarEntregado(Long pedidoId) {
         try {
-            // 1) Cargar pedido
             Pedido pedido = pedidoRepository.findById(pedidoId);
             if (pedido == null) {
                 return OperationResult.failure("Pedido no encontrado");
             }
 
-            // 2) Ejecutar lógica de dominio
+            // Ejecutar lógica de dominio
             pedido.completar();
 
-            // 3) Guardar
+            // Guardar
             pedidoRepository.save(pedido);
 
             return OperationResult.success("Pedido completado correctamente");

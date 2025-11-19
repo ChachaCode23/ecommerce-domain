@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface ListaDeseosRepository extends IBaseRepository<ListaDeseos, Long> {
 
-    // Evitar duplicados: consultar por usuario+producto
+    // Evita duplicados, consultar por usuario+producto
     boolean existsByUsuarioIdAndProductoId(Long usuarioId, Long productoId);
 
     // Listar por usuario (útil para UI)

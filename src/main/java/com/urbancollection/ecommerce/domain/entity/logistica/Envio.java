@@ -1,20 +1,23 @@
 package com.urbancollection.ecommerce.domain.entity.logistica;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.urbancollection.ecommerce.domain.base.BaseEntity;
 import com.urbancollection.ecommerce.domain.entity.ventas.Pedido;
 import com.urbancollection.ecommerce.domain.enums.EstadoDeEnvio;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.persistence.Column;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.EnumType;
+import java.time.LocalDateTime;
 
 /**
  * Envio
@@ -39,6 +42,7 @@ public class Envio extends BaseEntity {
     @NotNull(message = "El pedido es obligatorio")
     @ManyToOne(optional = false)
     @JoinColumn(name = "pedido_id", nullable = false)
+    @JsonIgnoreProperties({"items", "envio", "usuario", "direccionEntrega"})
     private Pedido pedido;
 
     @NotBlank(message = "El tracking es obligatorio")
@@ -51,8 +55,24 @@ public class Envio extends BaseEntity {
     @Column(name = "estado", length = 30, nullable = false)
     private EstadoDeEnvio estado;
 
+    // ===== CAMPOS DE AUDITORÍA =====
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     public Envio() {}
 
+    // Método que se ejecuta antes de persistir
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    // ===== GETTERS Y SETTERS =====
+    
     public Pedido getPedido() { return pedido; }
     public void setPedido(Pedido pedido) { this.pedido = pedido; }
 
@@ -60,7 +80,16 @@ public class Envio extends BaseEntity {
     public void setTracking(String tracking) { this.tracking = tracking; }
 
     public EstadoDeEnvio getEstado() { return estado; }
-    public void setEstado(EstadoDeEnvio estado) { this.estado = estado; }
+    public void setEstado(EstadoDeEnvio estado) { 
+        this.estado = estado;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
     @Override
     public String toString() {
@@ -69,6 +98,7 @@ public class Envio extends BaseEntity {
                 ", pedidoId=" + (pedido != null ? pedido.getId() : null) +
                 ", tracking='" + tracking + '\'' +
                 ", estado=" + estado +
+                ", createdAt=" + createdAt +
                 '}';
     }
 }

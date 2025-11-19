@@ -14,6 +14,7 @@ import java.util.List;
  * - findAll(): lista todas las direcciones guardadas.
  * - save(direccion): crea o actualiza una dirección.
  * - deleteById(id): elimina por id.
+ * - findPrincipalByUsuarioId(usuarioId): busca la dirección principal de un usuario.
  */
 public interface DireccionRepository {
 
@@ -24,4 +25,7 @@ public interface DireccionRepository {
     Direccion save(Direccion direccion);
 
     void deleteById(Long id);
+
+    // ✅ NUEVO: Buscar dirección principal por usuario
+    Direccion findPrincipalByUsuarioId(Integer usuarioId);
 }

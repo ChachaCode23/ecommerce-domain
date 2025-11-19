@@ -49,7 +49,7 @@ public class ProductoRepositoryImpl implements ProductoRepository {
     /**
      * findByNombreIgnoreCase:
      * Busca el primer producto cuyo nombre coincida con el nombre dado
-     * sin importar mayúsculas/minúsculas.
+     * sin importar mayúsculas o minúsculas.
      *
      * Ejemplo:
      *   "gorra negra" == "GORRA NEGRA"

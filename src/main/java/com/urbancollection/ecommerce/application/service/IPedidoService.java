@@ -28,6 +28,9 @@ import java.util.List;
  *   Registra el pago del pedido. Aquí se valida el monto pagado,
  *   el método de pago y normalmente también se actualiza el stock real.
  *
+ * ✅ NUEVO: marcarComoPagado(...)
+ *   Marca el pedido como PAGADO sin procesar pago real (para testing/admin)
+ *
  * despacharPedido(...)
  *   Marca el pedido como enviado y guarda el tracking del envío.
  *
@@ -47,6 +50,9 @@ public interface IPedidoService {
     OperationResult confirmarPago(Long pedidoId,
                                   MetodoDePago metodo,
                                   BigDecimal monto);
+
+    // ✅ NUEVO: Marcar como pagado (sin procesar pago real)
+    OperationResult marcarComoPagado(Long pedidoId);
 
     OperationResult despacharPedido(Long pedidoId, String tracking);
 

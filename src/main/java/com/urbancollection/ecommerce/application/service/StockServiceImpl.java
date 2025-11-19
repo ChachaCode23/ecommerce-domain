@@ -28,7 +28,7 @@ public class StockServiceImpl implements StockService {
             Producto p = productoRepository.findById(it.getProducto().getId());
             if (p == null) throw new IllegalStateException("Producto no encontrado: " + it.getProducto().getId());
 
-            Integer stock = p.getStock(); // ✅ evita comparar int con null
+            Integer stock = p.getStock(); //  evita comparar int con null
             if (stock == null || stock < it.getCantidad()) {
                 throw new IllegalStateException("Stock insuficiente para producto " + p.getId());
             }
