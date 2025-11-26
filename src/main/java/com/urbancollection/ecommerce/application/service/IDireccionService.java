@@ -17,6 +17,12 @@ public interface IDireccionService {
     // Si no existe, el Optional estará vacío.
     Optional<Direccion> buscarPorId(Long id);
 
+    // ✅ NUEVO: Busca la dirección principal de un usuario
+    Optional<Direccion> buscarPrincipalPorUsuarioId(Integer usuarioId);
+
+    // ✅ NUEVO: Busca todas las direcciones de un usuario
+    List<Direccion> buscarPorUsuarioId(Integer usuarioId);
+
     // Crea una nueva dirección.
     // Retorna un OperationResult indicando si la operación fue exitosa o no.
     OperationResult crear(Direccion direccion);

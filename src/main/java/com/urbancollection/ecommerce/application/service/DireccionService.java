@@ -2,6 +2,7 @@ package com.urbancollection.ecommerce.application.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.urbancollection.ecommerce.domain.base.OperationResult;
 import com.urbancollection.ecommerce.domain.entity.logistica.Direccion;
@@ -30,6 +31,22 @@ public class DireccionService implements IDireccionService {
     // Busca una dirección por su id y la envuelve en un Optional.
     public Optional<Direccion> buscarPorId(Long id) {
         return Optional.ofNullable(direccionRepository.findById(id));
+    }
+
+    @Override
+    // ✅ NUEVO: Busca la dirección principal de un usuario
+    public Optional<Direccion> buscarPrincipalPorUsuarioId(Integer usuarioId) {
+        Direccion direccion = direccionRepository.findPrincipalByUsuarioId(usuarioId);
+        return Optional.ofNullable(direccion);
+    }
+
+    @Override
+    // ✅ NUEVO: Busca todas las direcciones de un usuario
+    public List<Direccion> buscarPorUsuarioId(Integer usuarioId) {
+        // Filtramos todas las direcciones por usuarioId
+        return direccionRepository.findAll().stream()
+                .filter(d -> d.getUsuarioId() != null && d.getUsuarioId().equals(usuarioId))
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -7,62 +7,58 @@ import com.urbancollection.ecommerce.domain.base.OperationResult;
 import com.urbancollection.ecommerce.domain.entity.catalogo.Cupon;
 import com.urbancollection.ecommerce.domain.repository.CuponRepository;
 
-// Servicio de aplicación para manejar la lógica relacionada con cupones.
-// Aquí se orquesta el acceso al repositorio y se devuelven OperationResult
-// para indicar si las operaciones fueron exitosas o fallaron.
+/**
+ * Servicio de aplicación para manejar la lógica relacionada con cupones.
+ * Aquí se orquesta el acceso al Repository y se devuelven OperationResult
+ * para indicar si las operaciones fueron exitosas o fallaron.
+ * 
+ */
 public class CuponService implements ICuponService {
 
-    // Repositorio del dominio para acceder a la tabla de cupones.
-    private final CuponRepository repository;
+    private final CuponRepository cuponRepository;
 
-    // El repositorio se inyecta por constructor.
-    public CuponService(CuponRepository repository) {
-        this.repository = repository;
+    public CuponService(CuponRepository cuponRepository) {
+        this.cuponRepository = cuponRepository;
     }
 
     @Override
-    // Devuelve la lista completa de cupones.
     public List<Cupon> listar() {
-        return repository.findAll();
+        return cuponRepository.findAll();
     }
 
     @Override
-    // Busca un cupón por su id y lo envuelve en un Optional.
     public Optional<Cupon> buscarPorId(Long id) {
-        return Optional.ofNullable(repository.findById(id));
+        Cupon cupon = cuponRepository.findById(id);
+        return Optional.ofNullable(cupon);
     }
 
     @Override
-    // Crea un nuevo cupón.
-    // Si el cupón es null, devuelve un OperationResult de error.
     public OperationResult crear(Cupon cupon) {
         if (cupon == null) return OperationResult.failure("Cupón inválido");
-        repository.save(cupon);
-        return OperationResult.success("Creado");
+        
+        cuponRepository.save(cupon);
+        return OperationResult.success("Cupón creado correctamente");
     }
 
     @Override
-    // Actualiza un cupón existente.
-    // Primero verifica que exista y que los cambios no sean null.
     public OperationResult actualizar(Long id, Cupon cambios) {
-        Cupon existente = repository.findById(id);
-        if (existente == null) return OperationResult.failure("No existe");
+        Cupon existente = cuponRepository.findById(id);
+        if (existente == null) return OperationResult.failure("Cupón no encontrado");
+        
         if (cambios == null) return OperationResult.failure("Cambios inválidos");
 
-        // Asegura que el id que se guarda sea el del cupón que se está actualizando.
+        // Asegura que el id que se guarda sea el del cupón que se está actualizando
         cambios.setId(id);
-        repository.save(cambios);
-        return OperationResult.success("Actualizado");
+        cuponRepository.save(cambios);
+        return OperationResult.success("Cupón actualizado correctamente");
     }
 
     @Override
-    // Elimina un cupón por id.
-    // Si no existe, devuelve un OperationResult indicando que no se encontró.
     public OperationResult eliminar(Long id) {
-        Cupon existente = repository.findById(id);
-        if (existente == null) return OperationResult.failure("No existe");
+        Cupon existente = cuponRepository.findById(id);
+        if (existente == null) return OperationResult.failure("Cupón no encontrado");
         
-        repository.deleteById(id);
-        return OperationResult.success("Eliminado");
+        cuponRepository.deleteById(id);
+        return OperationResult.success("Cupón eliminado correctamente");
     }
 }

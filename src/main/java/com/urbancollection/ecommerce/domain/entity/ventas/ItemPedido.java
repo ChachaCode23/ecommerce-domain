@@ -78,4 +78,16 @@ public class ItemPedido extends BaseEntity {
     public void setPedido(Pedido pedido) {
         this.pedido = pedido;
     }
+
+    // Métodos de compatibilidad para templates
+    public Long getProductoId() {
+        return producto != null ? producto.getId() : null;
+    }
+
+    public BigDecimal getSubtotal() {
+        if (precioUnitario == null) {
+            return BigDecimal.ZERO;
+        }
+        return precioUnitario.multiply(BigDecimal.valueOf(cantidad));
+    }
 }

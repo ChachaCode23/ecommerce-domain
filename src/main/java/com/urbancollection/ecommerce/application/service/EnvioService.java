@@ -13,37 +13,35 @@ import com.urbancollection.ecommerce.domain.repository.PedidoRepository;
 
 import jakarta.transaction.Transactional;
 
-// Servicio de aplicación para manejar los envíos.
-// Aquí se valida el estado del pedido y se actualiza tanto el envío
-// como el pedido según las reglas de negocio.
+/**
+ * Servicio de aplicación para manejar los envíos.
+ * Aquí se valida el estado del pedido y se actualiza tanto el envío
+ * como el pedido según las reglas de negocio.
+ * 
+ */
 public class EnvioService implements IEnvioService {
 
-    // Repositorio para acceder y guardar envíos en la base de datos.
     private final EnvioRepository envioRepository;
-    // Repositorio para consultar y actualizar pedidos relacionados con el envío.
     private final PedidoRepository pedidoRepository;
 
-    // Constructor donde se inyectan los repositorios necesarios.
     public EnvioService(EnvioRepository envioRepository, PedidoRepository pedidoRepository) {
         this.envioRepository = envioRepository;
         this.pedidoRepository = pedidoRepository;
     }
 
     @Override
-    // Devuelve la lista completa de envíos registrados.
     public List<Envio> listar() {
         return envioRepository.findAll();
     }
 
     @Override
-    // Busca un envío por id y lo envuelve en un Optional.
     public Optional<Envio> buscarPorId(Long id) {
-        return Optional.ofNullable(envioRepository.findById(id));
+        Envio envio = envioRepository.findById(id);
+        return Optional.ofNullable(envio);
     }
 
     @Override
     @Transactional
-    // Crea un nuevo envío y actualiza el estado del pedido si corresponde.
     public OperationResult crear(Envio envio) {
         if (envio == null) {
             return OperationResult.failure("Envío inválido");
@@ -67,18 +65,17 @@ public class EnvioService implements IEnvioService {
 
     @Override
     @Transactional
-    // Actualiza un envío existente y, si pasa a ENTREGADO, marca el pedido como COMPLETADO.
     public OperationResult actualizar(Long id, Envio cambios) {
         Envio existente = envioRepository.findById(id);
         if (existente == null) {
-            return OperationResult.failure("No existe");
+            return OperationResult.failure("Envío no encontrado");
         }
+        
         if (cambios == null) {
             return OperationResult.failure("Cambios inválidos");
         }
 
-       
-        // se actualiza el estado del pedido
+        // Se actualiza el estado del pedido
         if (cambios.getEstado() == EstadoDeEnvio.ENTREGADO && 
             existente.getEstado() != EstadoDeEnvio.ENTREGADO) {
             
@@ -89,7 +86,7 @@ public class EnvioService implements IEnvioService {
             }
         }
 
-        // Persistimos el objeto 'cambios' asegurando que tenga el id correcto.
+        // Persistimos el objeto 'cambios' asegurando que tenga el id correcto
         cambios.setId(id);
         envioRepository.save(cambios);
 
@@ -99,14 +96,13 @@ public class EnvioService implements IEnvioService {
 
     @Override
     @Transactional
-    // Elimina un envío si existe en la base de datos.
     public OperationResult eliminar(Long id) {
         Envio existente = envioRepository.findById(id);
         if (existente == null) {
-            return OperationResult.failure("No existe");
+            return OperationResult.failure("Envío no encontrado");
         }
        
         envioRepository.deleteById(id);
-        return OperationResult.success("Eliminado");
+        return OperationResult.success("Envío eliminado correctamente");
     }
 }

@@ -6,21 +6,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * Usuario
- *
- * Esta entidad representa a un usuario del sistema (cliente o admin).
- * Está mapeada a la tabla core.Usuario.
- *
- * - La PK real en la base es "usuario_id", no "id". Por eso usamos @AttributeOverride.
- * - El campo "correo" en el código se guarda en la columna "email" de la BD.
- * - La contraseña se guarda como hash (hash_password).
- * - El rol indica el tipo de usuario (por ejemplo "CUSTOMER" o "ADMIN").
- *
- * Restricciones:
- * - email es único (unique constraint + índice).
- * - nombre, email y rol son obligatorios.
- */
+// Entidad JPA que representa a un usuario en el sistema.
 @Entity
 @Table(
         name = "Usuario",
@@ -35,30 +21,45 @@ import jakarta.validation.constraints.Size;
                 @Index(name = "IX_Usuario_Email", columnList = "email")
         }
 )
+// Sobrescribimos la columna "id" de BaseEntity para que en BD se llame "usuario_id".
 @AttributeOverride(name = "id", column = @Column(name = "usuario_id"))
 public class Usuario extends BaseEntity {
 
+    // Nombre del usuario, obligatorio y con máximo de 150 caracteres.
     @NotBlank
     @Size(max = 150)
     @Column(name = "nombre", length = 150, nullable = false)
     private String nombre;
 
+    // Correo electrónico del usuario, obligatorio, con formato de email y máximo 150 caracteres.
     @NotBlank
     @Email
     @Size(max = 150)
     @Column(name = "email", length = 150, nullable = false)
-    private String correo; // columna real = email
+    private String correo;
 
+    // Contraseña en formato hash, no obligatoria, hasta 255 caracteres.
     @Size(max = 255)
     @Column(name = "hash_password", length = 255)
-    private String contrasena; // columna real = hash_password
+    private String contrasena;
 
+    // Rol del usuario (por ejemplo: ADMIN, CUSTOMER), obligatorio y con máximo 20 caracteres.
     @NotBlank
     @Size(max = 20)
     @Column(name = "rol", length = 20, nullable = false)
-    private String rol; // 'CUSTOMER' / 'ADMIN'
+    private String rol;
 
-    // ===== getters / setters =====
+    // Teléfono del usuario, opcional, máximo 20 caracteres.
+    @Size(max = 20)
+    @Column(name = "telefono", length = 20)
+    private String telefono;
+
+    // Indica si el usuario está activo o no. Por defecto true.
+    @Column(name = "activo")
+    private Boolean activo = true;
+
+    // ------- Getters y Setters --------
+
     public String getNombre() {
         return nombre;
     }
@@ -73,6 +74,11 @@ public class Usuario extends BaseEntity {
         this.correo = correo;
     }
 
+    // Método auxiliar para los controladores que usan "email" en lugar de "correo".
+    public void setEmail(String email) {
+        this.correo = email;
+    }
+
     public String getContrasena() {
         return contrasena;
     }
@@ -85,5 +91,19 @@ public class Usuario extends BaseEntity {
     }
     public void setRol(String rol) {
         this.rol = rol;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
+    public Boolean getActivo() {
+        return activo;
+    }
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
     }
 }

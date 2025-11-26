@@ -39,6 +39,7 @@ import java.util.List;
  *
  * obtenerPorId(...) / listarTodos()
  *   Consultas para devolver pedidos ya creados.
+ *   Lista pedidos PAGADOS sin envíos asociados (lógica movida del controlador)
  */
 public interface IPedidoService {
 
@@ -51,7 +52,7 @@ public interface IPedidoService {
                                   MetodoDePago metodo,
                                   BigDecimal monto);
 
-    // ✅ NUEVO: Marcar como pagado (sin procesar pago real)
+    // Marcar como pagado (sin procesar pago real)
     OperationResult marcarComoPagado(Long pedidoId);
 
     OperationResult despacharPedido(Long pedidoId, String tracking);
@@ -61,4 +62,15 @@ public interface IPedidoService {
     Pedido obtenerPorId(Long id);
 
     List<Pedido> listarTodos();
+
+    /**
+     * Listar pedidos disponibles para crear envío
+     * Retorna pedidos que están en estado PAGADO y NO tienen envíos asociados.
+     */
+    List<Pedido> listarPedidosDisponiblesParaEnvio();
+
+    /**
+     *  Elimina un pedido por su ID
+     */
+    OperationResult eliminar(Long id);
 }

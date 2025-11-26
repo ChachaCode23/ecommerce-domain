@@ -1,7 +1,17 @@
 package com.urbancollection.ecommerce.application.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -12,14 +22,29 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.urbancollection.ecommerce.domain.entity.ventas.Pedido;
-import com.urbancollection.ecommerce.domain.repository.PedidoRepository;
+import com.urbancollection.ecommerce.domain.repository.DireccionRepository;
+import com.urbancollection.ecommerce.domain.repository.TransaccionPagoRepository;
+import com.urbancollection.ecommerce.domain.service.StockService;
+import com.urbancollection.ecommerce.infrastructure.client.ICuponApiClient;
+import com.urbancollection.ecommerce.infrastructure.client.IPedidoApiClient;
+import com.urbancollection.ecommerce.infrastructure.client.IProductoApiClient;
+import com.urbancollection.ecommerce.infrastructure.client.IUsuarioApiClient;
+
 
 class PedidoServiceTest {
 
-    // Mock del repo real
-    private PedidoRepository pedidoRepository = mock(PedidoRepository.class);
+    //  Mocks de ApiClients en lugar de Repositories
+    private IPedidoApiClient pedidoApiClient = mock(IPedidoApiClient.class);
+    private IUsuarioApiClient usuarioApiClient = mock(IUsuarioApiClient.class);
+    private IProductoApiClient productoApiClient = mock(IProductoApiClient.class);
+    private ICuponApiClient cuponApiClient = mock(ICuponApiClient.class);
+    
+    // Se mantienen sin cambios (no refactorizados)
+    private DireccionRepository direccionRepository = mock(DireccionRepository.class);
+    private TransaccionPagoRepository transaccionPagoRepository = mock(TransaccionPagoRepository.class);
+    private StockService stockService = mock(StockService.class);
 
-    // Instancia del service creada por reflexión (inyectando el mock donde aplique)
+    // Instancia del service creada por reflexión (inyectando los mocks)
     private Object service;
 
     @BeforeEach
@@ -39,16 +64,33 @@ class PedidoServiceTest {
         }
         assertNotNull(selected, "No se encontró constructor público en PedidoService");
 
-        // Preparamos args: null en general, y el mock donde el tipo sea asignable a PedidoRepository
+        // Preparamos args con los ApiClients y repositories correctos
         Object[] args = new Object[selected.getParameterCount()];
         Class<?>[] ptypes = selected.getParameterTypes();
+        
         for (int i = 0; i < ptypes.length; i++) {
-            if (ptypes[i].isAssignableFrom(PedidoRepository.class)) {
-                args[i] = pedidoRepository; // inyecta el mock de repo
+            // ✅ NUEVO: Inyectar ApiClients
+            if (ptypes[i].isAssignableFrom(IUsuarioApiClient.class)) {
+                args[i] = usuarioApiClient;
+            } else if (ptypes[i].isAssignableFrom(IProductoApiClient.class)) {
+                args[i] = productoApiClient;
+            } else if (ptypes[i].isAssignableFrom(IPedidoApiClient.class)) {
+                args[i] = pedidoApiClient;
+            } else if (ptypes[i].isAssignableFrom(ICuponApiClient.class)) {
+                args[i] = cuponApiClient;
+            }
+            //  Repositories no refactorizados
+            else if (ptypes[i].isAssignableFrom(DireccionRepository.class)) {
+                args[i] = direccionRepository;
+            } else if (ptypes[i].isAssignableFrom(TransaccionPagoRepository.class)) {
+                args[i] = transaccionPagoRepository;
+            } else if (ptypes[i].isAssignableFrom(StockService.class)) {
+                args[i] = stockService;
             } else {
-                args[i] = null; // el resto en null (evita dependencias no necesarias)
+                args[i] = null; // el resto en null
             }
         }
+        
         service = selected.newInstance(args);
         assertNotNull(service);
     }
@@ -67,10 +109,12 @@ class PedidoServiceTest {
     }
 
     @Test
-    void crear_pedido_invoca_save_en_repo_si_existe_metodo_de_creacion() throws Exception {
+    void crear_pedido_invoca_crear_en_apiClient_si_existe_metodo_de_creacion() throws Exception {
         // arrange
         Pedido p = new Pedido();
-        when(pedidoRepository.save(any(Pedido.class))).thenAnswer(inv -> {
+        
+        //  Mock del ApiClient en lugar del Repository
+        when(pedidoApiClient.crear(any(Pedido.class))).thenAnswer(inv -> {
             Pedido x = inv.getArgument(0);
             x.setId(1L);
             return x;
@@ -78,17 +122,14 @@ class PedidoServiceTest {
 
         // Intentar múltiples nombres/firmas comunes
         String[][] candidates = {
-            // nombre, firma esperada (FQCN del primer parámetro o vacío si sin parámetros)
             {"crear", "com.urbancollection.ecommerce.domain.entity.ventas.Pedido"},
             {"crearPedido", "com.urbancollection.ecommerce.domain.entity.ventas.Pedido"},
             {"create", "com.urbancollection.ecommerce.domain.entity.ventas.Pedido"},
             {"createOrder", "com.urbancollection.ecommerce.domain.entity.ventas.Pedido"},
             {"guardar", "com.urbancollection.ecommerce.domain.entity.ventas.Pedido"},
-            // variantes con DTO/comando (si existieran)
             {"crear", "com.urbancollection.ecommerce.application.dto.PedidoDTO"},
             {"crearPedido", "com.urbancollection.ecommerce.application.dto.PedidoDTO"},
             {"create", "com.urbancollection.ecommerce.application.dto.PedidoDTO"},
-            // sin parámetros (por si construye internamente)
             {"crear", ""},
             {"crearPedido", ""},
             {"create", ""}
@@ -130,14 +171,16 @@ class PedidoServiceTest {
             return;
         }
 
-        // Si se invocó algún método de creación, esperamos delegación al repo
-        verify(pedidoRepository, atLeastOnce()).save(any(Pedido.class));
+        // ✅ CAMBIADO: Verificar delegación al ApiClient
+        verify(pedidoApiClient, atLeastOnce()).crear(any(Pedido.class));
     }
 
     @Test
     void actualizar_inexistente_no_guarda() throws Exception {
         Long id = 999L;
-        when(pedidoRepository.findById(id)).thenReturn(null);
+        
+        //  Mock del ApiClient retornando Optional.empty()
+        when(pedidoApiClient.buscarPorId(id)).thenReturn(Optional.empty());
 
         String[] actualizarNames = { "actualizar", "actualizarPedido", "update" };
         Object res = invokeAny(service, actualizarNames, new Class<?>[]{ Long.class, Pedido.class }, id, new Pedido());
@@ -145,37 +188,37 @@ class PedidoServiceTest {
         // si el método no existe, no fallamos la suite completa:
         if (res == null) return;
 
-        // no debería guardar si no existe
-        verify(pedidoRepository, never()).save(any());
+        //  No debería llamar a actualizar si no existe
+        verify(pedidoApiClient, never()).actualizar(anyLong(), any());
     }
 
     @Test
-    void eliminar_existente_invoca_delete_en_repo() throws Exception {
+    void eliminar_existente_invoca_delete_en_apiClient() throws Exception {
         Long id = 7L;
-        Pedido existente = new Pedido(); existente.setId(id);
-        when(pedidoRepository.findById(id)).thenReturn(existente);
+        Pedido existente = new Pedido(); 
+        existente.setId(id);
+        
+        //  Mock del ApiClient retornando Optional con el pedido
+        when(pedidoApiClient.buscarPorId(id)).thenReturn(Optional.of(existente));
 
         String[] eliminarNames = { "eliminar", "eliminarPedido", "delete", "deleteById", "cancelar", "cancelarPedido" };
-        // preferimos Long.class; si tu método usa primitivo long, también suele funcionar por autoboxing
         Object res = invokeAny(service, eliminarNames, new Class<?>[]{ Long.class }, id);
 
         // si el método no existe, no fallamos; pero validamos comportamiento cuando existe:
         if (res != null) {
-            // el service típico llama pedidoRepository.delete(id) o deleteById(id)
-            try {
-                verify(pedidoRepository, atLeastOnce()).delete(id);
-            } catch (Throwable t) {
-                // si usa deleteById:
-                verify(pedidoRepository, atLeastOnce()).delete(id);
-            }
+            //  Verificar que se llamó a eliminar del ApiClient
+            verify(pedidoApiClient, atLeastOnce()).eliminar(id);
         }
     }
 
     @Test
-    void listar_y_buscarPorId_delegan_al_repo_si_existen() throws Exception {
-        Pedido p = new Pedido(); p.setId(1L);
-        when(pedidoRepository.findAll()).thenReturn(List.of(p));
-        when(pedidoRepository.findById(1L)).thenReturn(p);
+    void listar_y_buscarPorId_delegan_al_apiClient_si_existen() throws Exception {
+        Pedido p = new Pedido(); 
+        p.setId(1L);
+        
+        //  Mocks del ApiClient
+        when(pedidoApiClient.listar()).thenReturn(List.of(p));
+        when(pedidoApiClient.buscarPorId(1L)).thenReturn(Optional.of(p));
 
         // listar
         String[] listarNames = { "listar", "listarTodos", "findAll", "obtenerTodos" };
@@ -185,7 +228,9 @@ class PedidoServiceTest {
             @SuppressWarnings("unchecked")
             List<Pedido> lista = (List<Pedido>) listRes;
             assertFalse(lista.isEmpty());
-            verify(pedidoRepository, times(1)).findAll();
+            
+            //  Verificar llamada al ApiClient
+            verify(pedidoApiClient, times(1)).listar();
         }
 
         // buscarPorId
@@ -200,7 +245,9 @@ class PedidoServiceTest {
                 assertTrue(oneRes instanceof Pedido);
                 assertEquals(1L, ((Pedido) oneRes).getId());
             }
-            verify(pedidoRepository, times(1)).findById(1L);
+            
+            //  Verificar llamada al ApiClient
+            verify(pedidoApiClient, times(1)).buscarPorId(1L);
         }
     }
 }

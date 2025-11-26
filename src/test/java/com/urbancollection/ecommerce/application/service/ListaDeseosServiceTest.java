@@ -7,9 +7,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.urbancollection.ecommerce.domain.repository.ListaDeseosRepository;
-// importa otros puertos si tu service los usa:
-// import com.urbancollection.ecommerce.shared.logging.LoggerPort;
-// import com.urbancollection.ecommerce.shared.tasks.TaskListPort;
 
 @ExtendWith(MockitoExtension.class)
 class ListaDeseosServiceTest {

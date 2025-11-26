@@ -17,6 +17,7 @@ import com.urbancollection.ecommerce.domain.entity.usuarios.Usuario;
 import com.urbancollection.ecommerce.domain.repository.DireccionRepository;
 import com.urbancollection.ecommerce.domain.repository.UsuarioRepository;
 
+
 @ExtendWith(MockitoExtension.class)
 class UsuarioServiceTest {
 
@@ -39,7 +40,8 @@ class UsuarioServiceTest {
         nuevo.setContrasena("123456");
         nuevo.setRol("CLIENTE");
 
-        when(usuarioRepository.existsByCorreoIgnoreCase("user@dom.com")).thenReturn(false);
+        when(usuarioRepository.existsByCorreoIgnoreCase(anyString())).thenReturn(false);
+        
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> {
             Usuario u = inv.getArgument(0);
             u.setId(1L);
@@ -49,6 +51,7 @@ class UsuarioServiceTest {
         OperationResult result = service.crear(nuevo);
 
         assertNotNull(result);
+        verify(usuarioRepository, times(1)).existsByCorreoIgnoreCase(anyString());
         verify(usuarioRepository, times(1)).save(any(Usuario.class));
     }
 
@@ -66,6 +69,7 @@ class UsuarioServiceTest {
 
         assertNotNull(result);
         assertFalse(result.isSuccess(), "Debe fallar si el correo ya existe");
+        verify(usuarioRepository, times(1)).existsByCorreoIgnoreCase("dup@dom.com");
         verify(usuarioRepository, never()).save(any());
     }
 
@@ -80,6 +84,7 @@ class UsuarioServiceTest {
         existente.setCorreo("a@dom.com");
         existente.setContrasena("123456");
         existente.setRol("CLIENTE");
+        
         when(usuarioRepository.findById(id)).thenReturn(existente);
 
         Usuario cambios = new Usuario();
@@ -107,6 +112,7 @@ class UsuarioServiceTest {
         var result = service.eliminar(id);
 
         assertNotNull(result);
+        verify(usuarioRepository, times(1)).findById(id);
         verify(usuarioRepository, times(1)).delete(id);
     }
 
@@ -118,14 +124,16 @@ class UsuarioServiceTest {
         OperationResult result = service.eliminar(id);
 
         assertFalse(result.isSuccess());
+        verify(usuarioRepository, times(1)).findById(id);
         verify(usuarioRepository, never()).delete(anyLong());
     }
 
     // ---------- listar / buscar ----------
     @Test
-    void listar_devuelve_resultado_del_repo() {
+    void listar_devuelve_resultado_del_repository() {
         Usuario u = new Usuario();
         u.setId(1L);
+        
         when(usuarioRepository.findAll()).thenReturn(List.of(u));
 
         var out = service.listar();
@@ -140,6 +148,7 @@ class UsuarioServiceTest {
     void buscarPorId_envuelve_en_optional() {
         Usuario u = new Usuario();
         u.setId(5L);
+        
         when(usuarioRepository.findById(5L)).thenReturn(u);
 
         Optional<Usuario> out = service.buscarPorId(5L);

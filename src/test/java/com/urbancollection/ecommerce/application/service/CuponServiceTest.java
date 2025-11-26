@@ -24,21 +24,22 @@ import com.urbancollection.ecommerce.domain.base.OperationResult;
 import com.urbancollection.ecommerce.domain.entity.catalogo.Cupon;
 import com.urbancollection.ecommerce.domain.repository.CuponRepository;
 
+
 @ExtendWith(MockitoExtension.class)
 class CuponServiceTest {
 
-    @Mock private CuponRepository repo;
+    @Mock private CuponRepository cuponRepository;
 
     private CuponService service;
 
     @BeforeEach
     void setUp() {
-        service = new CuponService(repo);
+        service = new CuponService(cuponRepository);
     }
 
     @Test
     void crear_valido_success_y_guarda() {
-        when(repo.save(any(Cupon.class))).thenAnswer(inv -> {
+        when(cuponRepository.save(any(Cupon.class))).thenAnswer(inv -> {
             Cupon x = inv.getArgument(0);
             x.setId(1L);
             return x;
@@ -48,7 +49,7 @@ class CuponServiceTest {
 
         assertNotNull(r);
         assertTrue(r.isSuccess());
-        verify(repo, times(1)).save(any(Cupon.class));
+        verify(cuponRepository, times(1)).save(any(Cupon.class));
     }
 
     @Test
@@ -57,64 +58,71 @@ class CuponServiceTest {
 
         assertNotNull(r);
         assertFalse(r.isSuccess());
-        verify(repo, never()).save(any());
+        verify(cuponRepository, never()).save(any());
     }
 
     @Test
     void actualizar_existente_success_y_save() {
         Long id = 10L;
-        when(repo.findById(id)).thenReturn(new Cupon());
-        when(repo.save(any(Cupon.class))).thenAnswer(inv -> inv.getArgument(0));
+        Cupon existente = new Cupon();
+        existente.setId(id);
+        
+        when(cuponRepository.findById(id)).thenReturn(existente);
+        when(cuponRepository.save(any(Cupon.class))).thenAnswer(inv -> inv.getArgument(0));
 
         OperationResult r = service.actualizar(id, new Cupon());
 
         assertTrue(r.isSuccess());
-        verify(repo, times(1)).findById(id);
-        verify(repo, times(1)).save(any(Cupon.class));
+        verify(cuponRepository, times(1)).findById(id);
+        verify(cuponRepository, times(1)).save(any(Cupon.class));
     }
 
     @Test
     void actualizar_inexistente_failure() {
         Long id = 999L;
-        when(repo.findById(id)).thenReturn(null);
+        when(cuponRepository.findById(id)).thenReturn(null);
 
         OperationResult r = service.actualizar(id, new Cupon());
 
         assertFalse(r.isSuccess());
-        verify(repo, times(1)).findById(id);
-        verify(repo, never()).save(any());
+        verify(cuponRepository, times(1)).findById(id);
+        verify(cuponRepository, never()).save(any());
     }
 
     @Test
     void eliminar_existente_success_y_deleteById() {
         Long id = 7L;
-        Cupon c = new Cupon(); c.setId(id);
-        when(repo.findById(id)).thenReturn(c);
+        Cupon c = new Cupon(); 
+        c.setId(id);
+        
+        when(cuponRepository.findById(id)).thenReturn(c);
 
         OperationResult r = service.eliminar(id);
 
         assertTrue(r.isSuccess());
-        verify(repo, times(1)).findById(id);
-        verify(repo, times(1)).deleteById(id); // tu repo usa deleteById
+        verify(cuponRepository, times(1)).findById(id);
+        verify(cuponRepository, times(1)).deleteById(id);
     }
 
     @Test
     void eliminar_inexistente_failure() {
         Long id = 7L;
-        when(repo.findById(id)).thenReturn(null);
+        when(cuponRepository.findById(id)).thenReturn(null);
 
         OperationResult r = service.eliminar(id);
 
         assertFalse(r.isSuccess());
-        verify(repo, times(1)).findById(id);
-        verify(repo, never()).deleteById(anyLong());
+        verify(cuponRepository, times(1)).findById(id);
+        verify(cuponRepository, never()).deleteById(anyLong());
     }
 
     @Test
-    void listar_y_buscarPorId_delegan_al_repo() {
-        Cupon c = new Cupon(); c.setId(1L);
-        when(repo.findAll()).thenReturn(List.of(c));
-        when(repo.findById(1L)).thenReturn(c);
+    void listar_y_buscarPorId_delegan_al_repository() {
+        Cupon c = new Cupon(); 
+        c.setId(1L);
+        
+        when(cuponRepository.findAll()).thenReturn(List.of(c));
+        when(cuponRepository.findById(1L)).thenReturn(c);
 
         var all = service.listar();
         Optional<Cupon> uno = service.buscarPorId(1L);
@@ -122,7 +130,7 @@ class CuponServiceTest {
         assertEquals(1, all.size());
         assertTrue(uno.isPresent());
         assertEquals(1L, uno.get().getId());
-        verify(repo, times(1)).findAll();
-        verify(repo, times(1)).findById(1L);
+        verify(cuponRepository, times(1)).findAll();
+        verify(cuponRepository, times(1)).findById(1L);
     }
 }

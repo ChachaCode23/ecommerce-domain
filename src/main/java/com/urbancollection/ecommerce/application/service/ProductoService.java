@@ -19,21 +19,15 @@ import com.urbancollection.ecommerce.shared.tasks.TaskListPort;
 public class ProductoService implements IProductoService {
 
     private final ProductoRepository productoRepository;
-    private final LoggerPort loggerPort;
-    private final TaskListPort taskListPort;
-
+    
     public ProductoService(ProductoRepository productoRepository,
                            LoggerPort loggerPort,
                            TaskListPort taskListPort) {
         this.productoRepository = productoRepository;
-        this.loggerPort = loggerPort;
-        this.taskListPort = taskListPort;
     }
     
     public ProductoService(ProductoRepository productoRepository) {
         this.productoRepository = productoRepository;
-        this.loggerPort = null;
-        this.taskListPort = null;
     }
 
     // ==================== MÉTODOS DE IProductoService ====================
@@ -50,7 +44,7 @@ public class ProductoService implements IProductoService {
     public Optional<ProductoDTO> buscarPorId(Long id) {
         if (id == null) return Optional.empty();
         Producto producto = productoRepository.findById(id);
-        return producto != null ? Optional.of(toDTO(producto)) : Optional.empty();
+        return Optional.ofNullable(producto).map(this::toDTO);
     }
 
     @Override
@@ -68,7 +62,7 @@ public class ProductoService implements IProductoService {
                 return OperationResult.failure("El precio debe ser mayor a 0");
             }
 
-            Producto guardado = productoRepository.save(p);
+            productoRepository.save(p);
             return OperationResult.success("Producto creado correctamente");
             
         } catch (Exception e) {
